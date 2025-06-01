@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
-import { ZillaCaptureSource } from "./types.js";
+import { ZillaCaptureVarSource } from "./types.js";
 import { JSONPath } from "jsonpath-plus";
-import { isEmpty } from "zilla-util";
+import { deepGet, isEmpty } from "zilla-util";
 
 const isComparable = (v: unknown): v is string | number =>
   typeof v === "string" || typeof v === "number";
@@ -61,9 +61,11 @@ export const walk = (v: unknown, ctx: Ctx): unknown => {
 export const headerName = (h: string): string => h.replace(/[^a-z0-9]/gi, "");
 
 export const extract = (
-  src: ZillaCaptureSource,
+  varName: string,
+  src: ZillaCaptureVarSource,
   body: object | string,
-  hdrs: Headers
+  hdrs: Headers,
+  vars: Record<string, unknown | null>
 ): unknown => {
   if (src.body !== undefined) {
     /* full-body capture (object or raw text) */
@@ -77,6 +79,27 @@ export const extract = (
     }) as unknown;
   }
 
+  if (src.assign) {
+    if (typeof vars[src.assign] !== "undefined") {
+      const dotPos = src.assign.indexOf(".");
+      const bracketPos = src.assign.indexOf("[");
+      if (bracketPos === -1 && dotPos === -1) {
+        return vars[src.assign];
+      }
+      if (bracketPos === -1 || dotPos < bracketPos) {
+        const srcObj = src.assign.substring(0, dotPos);
+        const srcPath = src.assign.substring(dotPos + 1);
+        return deepGet(srcObj, srcPath);
+      }
+      const srcObj = src.assign.substring(0, bracketPos);
+      const srcPath = src.assign.substring(bracketPos + 1);
+      return deepGet(srcObj, srcPath);
+    }
+    throw new Error(
+      `extract: var=${varName} error=undefined_variable assign=${src.assign}`
+    );
+  }
+
   if (src.header) return hdrs.get(src.header.name) ?? null;
 
   if (src.cookie) {
@@ -85,5 +108,5 @@ export const extract = (
     return match ? match[1] : null;
   }
 
-  throw new Error("invalid capture source");
+  throw new Error(`extract: var=${varName} error=invalid_capture_source`);
 };

@@ -39,8 +39,11 @@ export type ZillaCaptureSession = {
     name: string;
     from?: ZillaCaptureSource;
 };
+export type ZillaCaptureVarSource = ZillaCaptureSource & {
+    assign?: string;
+};
 export type ZillaCaptureVars = {
-    [varName: string]: ZillaCaptureSource;
+    [varName: string]: ZillaCaptureVarSource;
 };
 export type ZillaResponseValidation = {
     name: string;

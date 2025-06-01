@@ -67,9 +67,11 @@ export type ZillaCaptureSession = {
   from?: ZillaCaptureSource;
 };
 
+export type ZillaCaptureVarSource = ZillaCaptureSource & { assign?: string };
+
 export type ZillaCaptureVars = {
   // the value for each varName must not be an empty object, even though all ZillaCaptureSource properties are optional, one must be specified
-  [varName: string]: ZillaCaptureSource;
+  [varName: string]: ZillaCaptureVarSource;
 };
 
 export type ZillaResponseValidation = {

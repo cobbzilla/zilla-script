@@ -119,7 +119,7 @@ export const runZillaScript = async (
           header: srv.session.header ? { name: srv.session.header } : undefined,
           cookie: srv.session.cookie ? { name: srv.session.cookie } : undefined,
         };
-        const tok = extract(strategy, resBody, res.headers);
+        const tok = extract("session", strategy, resBody, res.headers, {});
         if (typeof tok === "string") {
           sessions[step.response.session.name] = tok;
           logger.info(`captured session "${step.response.session.name}"`, tok);
@@ -134,7 +134,7 @@ export const runZillaScript = async (
       /* ---------- capture vars ------------------------------------- */
       if (step.response?.vars) {
         for (const [v, src] of Object.entries(step.response.vars)) {
-          const val = extract(src, resBody, res.headers);
+          const val = extract(v, src, resBody, res.headers, vars);
           vars[v] = val;
           logger.debug(`captured var ${v}`, val);
         }
