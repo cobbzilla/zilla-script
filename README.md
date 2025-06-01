@@ -14,9 +14,7 @@ Responses can be validated for a variety of conditions
 # Example
 
 ```typescript
-import {ZillaScript} from "./types.js";
-import {runZillaScript} from "./engine";
-import {exampleScript} from "./example";
+import { ZillaScript, runZillaScript } from "zilla-script";
 
 export const exampleScript: ZillaScript = {
     name: "example-script",
