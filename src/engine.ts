@@ -100,7 +100,12 @@ export const runZillaScript = async (
 
       /* ---------- capture session ---------------------------------- */
       if (step.response?.session) {
-        const tok = extract(step.response.session.from, resBody, res.headers);
+        const strategy = step.response.session.from ?? {
+          body: undefined,
+          header: srv.session.header ? { name: srv.session.header } : undefined,
+          cookie: srv.session.cookie ? { name: srv.session.cookie } : undefined,
+        };
+        const tok = extract(strategy, resBody, res.headers);
         if (typeof tok === "string") {
           sessions[step.response.session.name] = tok;
           logger.info(`captured session "${step.response.session.name}"`, tok);

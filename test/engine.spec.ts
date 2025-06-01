@@ -163,7 +163,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             status: 200,
             session: {
               name: "session-one",
-              from: { cookie: { name: "sess" } },
+              from: { cookie: { name: "sess" } }, // redundant, but why not test it
             },
           },
         },
@@ -206,10 +206,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
           request: { method: "PUT", uri: "session" },
           response: {
             status: 200,
-            session: {
-              name: "session-two",
-              from: { cookie: { name: "sess" } },
-            },
+            session: { name: "session-two" }, // omitting capture method, we use the server's method
           },
         },
         /* retrieve, expect empty object */

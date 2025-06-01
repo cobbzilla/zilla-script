@@ -1,13 +1,15 @@
 import { GenericLogger } from "zilla-util";
 
+export type ZillaScriptSendSession = {
+  // how to send session cookie. one of these is required
+  cookie?: string;
+  header?: string;
+};
+
 export type ZillaScriptServer = {
   name: string;
   base: string;
-  session: {
-    // how to send session cookie. one of these is required
-    cookie?: string;
-    header?: string;
-  };
+  session: ZillaScriptSendSession;
 };
 
 export type ZillaScriptInit = {
@@ -60,8 +62,9 @@ export type ZillaCaptureSession = {
   // name of session to track (or overwrite)
   name: string;
 
-  // from must not be an empty object, even though all ZillaCaptureSource properties are optional, one must be specified
-  from: ZillaCaptureSource;
+  // if from is absent, the 'from' for the server.session is used
+  // if from is present, it must not be an empty object, even though all ZillaCaptureSource properties are optional, one must be specified
+  from?: ZillaCaptureSource;
 };
 
 export type ZillaCaptureVars = {

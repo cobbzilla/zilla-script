@@ -1,11 +1,12 @@
 import { GenericLogger } from "zilla-util";
+export type ZillaScriptSendSession = {
+    cookie?: string;
+    header?: string;
+};
 export type ZillaScriptServer = {
     name: string;
     base: string;
-    session: {
-        cookie?: string;
-        header?: string;
-    };
+    session: ZillaScriptSendSession;
 };
 export type ZillaScriptInit = {
     servers: ZillaScriptServer[];
@@ -36,7 +37,7 @@ export type ZillaCaptureSource = {
 };
 export type ZillaCaptureSession = {
     name: string;
-    from: ZillaCaptureSource;
+    from?: ZillaCaptureSource;
 };
 export type ZillaCaptureVars = {
     [varName: string]: ZillaCaptureSource;
