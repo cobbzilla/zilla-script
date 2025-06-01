@@ -7,9 +7,9 @@ export type ZillaScriptSendSession = {
 };
 
 export type ZillaScriptServer = {
-  name: string;
+  name?: string;
   base: string;
-  session: ZillaScriptSendSession;
+  session?: ZillaScriptSendSession;
 };
 
 export type ZillaScriptInit = {

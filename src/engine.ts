@@ -65,6 +65,13 @@ export const runZillaScript = async (
       );
 
       if (step.request.session) {
+        if (!srv.session) {
+          throw new Error(
+            `step=${
+              step.name ?? "?no step name"
+            } session not supported by server=${srv.name}`
+          );
+        }
         const tok = sessions[step.request.session];
         if (tok) {
           if (srv.session.cookie)
@@ -100,6 +107,13 @@ export const runZillaScript = async (
 
       /* ---------- capture session ---------------------------------- */
       if (step.response?.session) {
+        if (!srv.session) {
+          throw new Error(
+            `step=${
+              step.name ?? "?no step name"
+            } session not supported by server=${srv.name}`
+          );
+        }
         const strategy = step.response.session.from ?? {
           body: undefined,
           header: srv.session.header ? { name: srv.session.header } : undefined,
