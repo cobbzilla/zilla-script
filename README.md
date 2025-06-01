@@ -1,6 +1,5 @@
 zilla-script
 ============
-
 A simple framework for sending JSON requests to servers and verifying responses.
 
 # Declarative tests
