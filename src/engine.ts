@@ -212,7 +212,9 @@ export const runZillaScript = async (
       };
 
       if (!overall) {
-        const msg = `validation failed in step ${step.name ?? "?"}`;
+        const msg = `validation failed in step ${
+          step.name ?? "?"
+        }: ${JSON.stringify(checkDetails, null, 2)}`;
         logger.error(msg);
         if (!opts.continueOnInvalid) throw new Error(msg);
       }
