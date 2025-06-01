@@ -1,6 +1,6 @@
 {
   "name": "zilla-script",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "type": "module",
   "description": "Simple testing framework for REST API testing",
   "keywords": [
@@ -54,7 +54,6 @@
     "globals": "^15.14.0",
     "h3": "^1.15.3",
     "handlebars": "^4.7.8",
-    "jsonpath-plus": "^10.3.0",
     "mocha": "^10.2.0",
     "prettier": "^2.8.8",
     "shasum": "^1.0.2",
@@ -67,5 +66,8 @@
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "dependencies": {
+    "jsonpath-plus": "^10.3.0"
   }
 }
