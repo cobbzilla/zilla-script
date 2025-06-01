@@ -60,6 +60,7 @@ export type ZillaScriptStep = {
     name?: string;
     comment?: string;
     server?: string;
+    vars?: Record<string, unknown | null>;
     request: ZillaScriptRequest;
     response?: ZillaScriptResponse;
 };

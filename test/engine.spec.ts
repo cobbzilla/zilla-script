@@ -181,6 +181,12 @@ describe("ZillaScript engine – basic h3 integration", function () {
         /* retrieve and validate */
         {
           name: "get-session-one",
+          vars: {
+            testVar1: "abc",
+            testVar2: 123,
+            testVar3: { foo: "bar" },
+            testVar4: "{{testVar1}}def",
+          },
           request: {
             method: "GET",
             uri: "session",
@@ -195,6 +201,10 @@ describe("ZillaScript engine – basic h3 integration", function () {
                   "compare body.a '==' '1'",
                   "compare body.b '==' '2'",
                   "compare body.c '==' '3'",
+                  "compare testVar1 '==' 'abc'",
+                  "compare testVar2 '==' 123",
+                  "compare testVar3.foo '==' 'bar'",
+                  "compare testVar4 '==' 'abcdef'",
                 ],
               },
             ],

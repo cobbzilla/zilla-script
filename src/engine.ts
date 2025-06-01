@@ -51,6 +51,14 @@ export const runZillaScript = async (
 
       /* ---------- url / headers / body ----------------------------- */
       const ctx: Ctx = { ...vars, env };
+      if (step.vars) {
+        for (const varName of Object.keys(step.vars)) {
+          vars[varName] = ctx[varName] =
+            typeof step.vars[varName] === "string"
+              ? evalTpl(step.vars[varName], ctx)
+              : step.vars[varName];
+        }
+      }
       const rawUrl = new URL(step.request.uri, srv.base).toString();
       const url = rawUrl.includes("{{") ? evalTpl(rawUrl, ctx) : rawUrl;
 

@@ -91,6 +91,7 @@ export type ZillaScriptStep = {
   name?: string;
   comment?: string;
   server?: string;
+  vars?: Record<string, unknown | null>;
   request: ZillaScriptRequest;
   response?: ZillaScriptResponse; // if response is omitted, we only validate that status must be 200
 };
