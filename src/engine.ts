@@ -186,7 +186,7 @@ export const runZillaScript = async (
             const pass = rendered.trim().toLowerCase() === "true";
             overall &&= pass;
             checkDetails.push({
-              name: validation.name,
+              name: evalTpl(validation.name, ctx),
               rendered,
               check: expr,
               result: pass,
@@ -195,7 +195,7 @@ export const runZillaScript = async (
           } catch (err) {
             overall = false;
             checkDetails.push({
-              name: validation.name,
+              name: evalTpl(validation.name, ctx),
               check: expr,
               rendered,
               error: (err as Error).message,
