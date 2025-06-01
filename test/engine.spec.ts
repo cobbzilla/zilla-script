@@ -107,7 +107,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
       },
       steps: [
         {
-          name: "post-step",
+          step: "post-step",
           request: {
             method: "POST",
             uri: "test",
@@ -157,7 +157,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
       steps: [
         /* --- session-one starts ------------------------------------ */
         {
-          name: "start-session-one",
+          step: "start-session-one",
           request: { method: "PUT", uri: "session" },
           response: {
             status: 200,
@@ -169,7 +169,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         },
         /* add three items */
         {
-          name: "add-to-session-one",
+          step: "add-to-session-one",
           request: {
             method: "POST",
             uri: "session",
@@ -180,7 +180,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         },
         /* retrieve and validate */
         {
-          name: "get-session-one",
+          step: "get-session-one",
           vars: {
             testVar1: "abc",
             testVar2: 123,
@@ -218,7 +218,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         },
         /* --- session-two starts ------------------------------------ */
         {
-          name: "start-session-two",
+          step: "start-session-two",
           request: { method: "PUT", uri: "session" },
           response: {
             status: 200,
@@ -227,7 +227,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         },
         /* retrieve, expect empty object */
         {
-          name: "get-session-two",
+          step: "get-session-two",
           request: {
             method: "GET",
             uri: "session",

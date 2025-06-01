@@ -43,7 +43,7 @@ export const runZillaScript = async (
   logger.info(`starting script "${script.name}"`);
 
   for (const step of script.steps) {
-    logger.info(`step "${step.name ?? "(unnamed)"}" begin`);
+    logger.info(`step "${step.step ?? "(unnamed)"}" begin`);
 
     /* create containers so we can still inspect them if an early error aborts */
     const checkDetails: ZillaResponseValidationResult["details"] = [];
@@ -53,7 +53,7 @@ export const runZillaScript = async (
       /* ---------- server resolution -------------------------------- */
       const srv = servers.find((s) => s.name === (step.server ?? defServer));
       if (!srv) {
-        const msg = `server not found for step ${step.name ?? "?"}`;
+        const msg = `server not found for step ${step.step ?? "?"}`;
         logger.error(msg);
         throw new Error(msg);
       }
@@ -71,7 +71,7 @@ export const runZillaScript = async (
       if (step.edits) {
         for (const [varName, val] of Object.entries(step.edits)) {
           if (typeof vars[varName] === "undefined") {
-            throw new Error(`step=${step.name} var=${varName} is undefined`);
+            throw new Error(`step=${step.step} var=${varName} is undefined`);
           }
           if (
             typeof val === "number" ||
@@ -106,7 +106,7 @@ export const runZillaScript = async (
         if (!srv.session) {
           throw new Error(
             `step=${
-              step.name ?? "?no step name"
+              step.step ?? "?no step name"
             } session not supported by server=${srv.name}`
           );
         }
@@ -148,7 +148,7 @@ export const runZillaScript = async (
         if (!srv.session) {
           throw new Error(
             `step=${
-              step.name ?? "?no step name"
+              step.step ?? "?no step name"
             } session not supported by server=${srv.name}`
           );
         }
@@ -217,7 +217,7 @@ export const runZillaScript = async (
             const pass = rendered.trim().toLowerCase() === "true";
             if (!pass) {
               logger.debug(
-                `FAILED step=${step.name} expr=${expr} cx=${JSON.stringify(cx)}`
+                `FAILED step=${step.step} expr=${expr} cx=${JSON.stringify(cx)}`
               );
             }
             overall &&= pass;
@@ -250,7 +250,7 @@ export const runZillaScript = async (
 
       if (!overall) {
         const msg = `validation failed in step ${
-          step.name ?? "?"
+          step.step ?? "?"
         }: ${JSON.stringify(checkDetails, null, 2)}\n
         cx=${JSON.stringify(cx, null, 2)}`;
         logger.error(msg);
@@ -267,9 +267,9 @@ export const runZillaScript = async (
         sessions: { ...sessions },
       });
 
-      logger.info(`step "${step.name ?? "(unnamed)"}" complete`);
+      logger.info(`step "${step.step ?? "(unnamed)"}" complete`);
     } catch (err) {
-      logger.error(`error in step "${step.name ?? "(unnamed)"}"`, err);
+      logger.error(`error in step "${step.step ?? "(unnamed)"}"`, err);
 
       if (!opts.continueOnError) throw err as Error;
 

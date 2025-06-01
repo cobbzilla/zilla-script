@@ -89,7 +89,7 @@ export type ZillaScriptResponse = {
 };
 
 export type ZillaScriptStep = {
-  name?: string;
+  step?: string;
   comment?: string;
   server?: string;
   vars?: Record<string, unknown | null>;
