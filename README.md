@@ -75,7 +75,7 @@ export const exampleScript: ZillaScript = {
                 },
             },
             response: {
-                status: 200, // could be omitted, 200 is the default,
+                status: 200, // could be omitted, 2xx is the default,
                 statusClass: "2xx", // enforces that status code is Nxx where 1>=N>=5
                 // when the session block is present, a new session will be tracked
                 session: {
@@ -154,7 +154,7 @@ export const exampleScript: ZillaScript = {
                 uri: "accounts/{{account.id}}/info",
             },
             response: {
-                // status and statusClass are omitted, we expect 200 by default
+                // status and statusClass are omitted, we expect 2xx by default
 
                 // validate section contains an array of validations
                 validate: [
