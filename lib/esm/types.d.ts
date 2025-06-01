@@ -4,7 +4,7 @@ export type ZillaScriptSendSession = {
     header?: string;
 };
 export type ZillaScriptServer = {
-    name?: string;
+    server?: string;
     base: string;
     session?: ZillaScriptSendSession;
 };
@@ -47,7 +47,7 @@ export type ZillaCaptureVars = {
     [varName: string]: ZillaCaptureVarSource;
 };
 export type ZillaResponseValidation = {
-    name: string;
+    id: string;
     check: string[];
 };
 export type ZillaScriptResponse = {
@@ -67,7 +67,7 @@ export type ZillaScriptStep = {
     response?: ZillaScriptResponse;
 };
 export type ZillaScript = {
-    name: string;
+    script: string;
     init?: ZillaScriptInit;
     steps: ZillaScriptStep[];
 };

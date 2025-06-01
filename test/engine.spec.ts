@@ -94,11 +94,11 @@ describe("ZillaScript engine – basic h3 integration", function () {
   /* ------------------------------------------------------------------ */
   it("handles a simple POST and passes validation", async () => {
     const script: ZillaScript = {
-      name: "post-echo",
+      script: "post-echo",
       init: {
         servers: [
           {
-            name: "local",
+            server: "local",
             base: baseUrl,
             session: { cookie: "sess" },
           },
@@ -117,7 +117,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             status: 200,
             validate: [
               {
-                name: "bodyCheck",
+                id: "bodyCheck",
                 check: [
                   "compare body.ok '==' true",
                   "compare body.echoed.foo '==' 'bar'",
@@ -143,11 +143,11 @@ describe("ZillaScript engine – basic h3 integration", function () {
   /* ------------------------------------------------------------------ */
   it("creates two independent sessions and manipulates data", async () => {
     const script: ZillaScript = {
-      name: "session-manipulation",
+      script: "session-manipulation",
       init: {
         servers: [
           {
-            name: "local",
+            server: "local",
             base: baseUrl,
             session: { cookie: "sess" },
           },
@@ -200,7 +200,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             status: 200,
             validate: [
               {
-                name: "dataCheck",
+                id: "dataCheck",
                 check: [
                   "compare body.a '==' '1'",
                   "compare body.b '==' '2'",
@@ -237,7 +237,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             status: 200,
             validate: [
               {
-                name: "emptyCheck",
+                id: "emptyCheck",
                 check: [
                   "compare body 'empty'", // body should be empty object
                   "compare body.a 'undefined'", // body.a is undefined

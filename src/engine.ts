@@ -26,21 +26,21 @@ export const runZillaScript = async (
     opts.init || {}
   ) as ZillaScriptInit;
   if (!init.servers) {
-    throw new Error(`script=${script.name} has no servers defined in init`);
+    throw new Error(`script=${script.script} has no servers defined in init`);
   }
   const vars: Record<string, unknown | null> = { ...init.vars };
   const sessions: Record<string, string> = init.sessions || {};
 
   const servers = init.servers.map((s, i) => ({
     ...s,
-    name: s.name ?? `default-${i}`,
+    name: s.server ?? `default-${i}`,
     base: evalTpl(s.base, { env }),
   }));
   const defServer = servers[0].name;
 
   const stepResults: ZillaStepResult[] = [];
 
-  logger.info(`starting script "${script.name}"`);
+  logger.info(`starting script "${script.script}"`);
 
   for (const step of script.steps) {
     logger.info(`step "${step.step ?? "(unnamed)"}" begin`);
@@ -222,7 +222,7 @@ export const runZillaScript = async (
             }
             overall &&= pass;
             checkDetails.push({
-              name: evalTpl(validation.name, ctx),
+              name: evalTpl(validation.id, ctx),
               rendered,
               check: expr,
               result: pass,
@@ -231,7 +231,7 @@ export const runZillaScript = async (
           } catch (err) {
             overall = false;
             checkDetails.push({
-              name: evalTpl(validation.name, ctx),
+              name: evalTpl(validation.id, ctx),
               check: expr,
               rendered,
               error: (err as Error).message,
@@ -296,6 +296,6 @@ export const runZillaScript = async (
     }
   }
 
-  logger.info(`script "${script.name}" finished`);
+  logger.info(`script "${script.script}" finished`);
   return { script, stepResults };
 };

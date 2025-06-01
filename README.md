@@ -17,7 +17,7 @@ Responses can be validated for a variety of conditions
 import { ZillaScript, runZillaScript } from "zilla-script";
 
 export const exampleScript: ZillaScript = {
-    name: "example-script",
+    script: "example-script",
     // the init section describes configuration and initialization
     // init data can also be passed on the opts object
     init: {
@@ -27,7 +27,7 @@ export const exampleScript: ZillaScript = {
         // if there are multiple servers defined, the first server is the "default" server.
         servers: [
             {
-                name: "my-server", // a symbolic name for the server. optional.
+                server: "my-server", // a symbolic name for the server. optional.
 
                 // the "base" property describes the base URI to use for all requests to the server
                 // The base URI can be a literal value, like http://127.0.0.1/myapi/ or
@@ -62,7 +62,7 @@ export const exampleScript: ZillaScript = {
     steps: [
         {
             // name of the step
-            name: "auth-account",
+            step: "auth-account",
             // a comment that describes the step
             comment: "authenticate with login and password",
             server: "my-server", // could be omitted since my-server is the default
@@ -128,14 +128,14 @@ export const exampleScript: ZillaScript = {
                 // the next step
                 validate: [
                     {
-                        name: "captured-correct-locale",
+                        id: "captured-correct-locale",
                         check: ["compare locale '==' 'es'"],
                     },
                 ],
             },
         },
         {
-            name: "get-acct-data",
+            step: "get-acct-data",
             comment: "request account data",
             request: {
                 // "server" is omitted, first server is default server, that is used
@@ -161,7 +161,7 @@ export const exampleScript: ZillaScript = {
                 validate: [
                     {
                         // name of the validation check
-                        name: "check username is correct",
+                        id: "check username is correct",
 
                         // check is an array of handlebars expressions, the enclosing {{ }} are implied for each.
                         // When evaluated by the engine the check below would be
