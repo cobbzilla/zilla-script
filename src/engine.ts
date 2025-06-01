@@ -68,6 +68,23 @@ export const runZillaScript = async (
               : step.vars[varName];
         }
       }
+      if (step.edits) {
+        for (const [varName, val] of Object.entries(step.edits)) {
+          if (typeof vars[varName] === "undefined") {
+            throw new Error(`step=${step.name} var=${varName} is undefined`);
+          }
+          if (
+            typeof val === "number" ||
+            typeof val === "string" ||
+            typeof val === "boolean" ||
+            val == null
+          ) {
+            vars[varName] = val;
+          } else {
+            vars[varName] = Object.assign({}, vars[varName], val);
+          }
+        }
+      }
       const rawUrl =
         (srv.base.endsWith("/") ? srv.base : srv.base + "/") +
         (step.request.uri.startsWith("/")

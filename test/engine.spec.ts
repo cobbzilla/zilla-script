@@ -184,8 +184,12 @@ describe("ZillaScript engine – basic h3 integration", function () {
           vars: {
             testVar1: "abc",
             testVar2: 123,
-            testVar3: { foo: "bar" },
+            testVar3: { foo: "bar", baz: "quux" },
             testVar4: "{{testVar1}}def",
+          },
+          // edit testVar3
+          edits: {
+            testVar3: { baz: "snarf", fish: 42 },
           },
           request: {
             method: "GET",
@@ -204,6 +208,8 @@ describe("ZillaScript engine – basic h3 integration", function () {
                   "compare testVar1 '==' 'abc'",
                   "compare testVar2 '==' 123",
                   "compare testVar3.foo '==' 'bar'",
+                  "compare testVar3.baz '==' 'snarf'", // edited, not quux!
+                  "compare testVar3.fish '==' 42", // edited, added
                   "compare testVar4 '==' 'abcdef'",
                 ],
               },
