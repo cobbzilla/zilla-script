@@ -9,7 +9,7 @@ export type ZillaScriptServer = {
     session?: ZillaScriptSendSession;
 };
 export type ZillaScriptInit = {
-    servers: ZillaScriptServer[];
+    servers?: ZillaScriptServer[];
     sessions?: Record<string, string>;
     vars?: Record<string, string | null>;
 };

@@ -25,6 +25,9 @@ export const runZillaScript = async (
     script.init || {},
     opts.init || {}
   ) as ZillaScriptInit;
+  if (!init.servers) {
+    throw new Error(`script=${script.name} has no servers defined in init`);
+  }
   const vars: Record<string, unknown | null> = { ...init.vars };
   const sessions: Record<string, string> = init.sessions || {};
 

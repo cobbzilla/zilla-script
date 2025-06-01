@@ -13,7 +13,7 @@ export type ZillaScriptServer = {
 };
 
 export type ZillaScriptInit = {
-  servers: ZillaScriptServer[];
+  servers?: ZillaScriptServer[];
   sessions?: Record<string, string>; // existing sessions, name->token
   vars?: Record<string, string | null>; // predefined vars
 };
