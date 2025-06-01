@@ -1,3 +1,5 @@
+import { GenericLogger } from "zilla-util";
+
 export type ZillaScriptServer = {
   name: string;
   base: string;
@@ -95,6 +97,7 @@ export type ZillaScript = {
 };
 
 export type ZillaScriptOptions = {
+  logger?: GenericLogger;
   continueOnInvalid?: boolean; // if true, keep running steps even if a validation fails
   continueOnError?: boolean; // if true, keep running steps even if a non-validation error occurs
   env?: Record<string, string>; // environment variables, so we do not use process.env. If omitted, use {} and no env vars are defined.
@@ -103,7 +106,13 @@ export type ZillaScriptOptions = {
 export type ZillaResponseValidationResult = {
   name: string;
   result: boolean; // overall result, only true if all checks were true
-  details: { check: string; result: boolean }[]; // all check results
+  details: {
+    name: string;
+    check: string;
+    rendered?: string;
+    error?: string;
+    result: boolean;
+  }[]; // all check results
 };
 
 export type ZillaStepResult = {

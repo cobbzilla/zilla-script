@@ -1,3 +1,4 @@
+import { GenericLogger } from "zilla-util";
 export type ZillaScriptServer = {
     name: string;
     base: string;
@@ -64,6 +65,7 @@ export type ZillaScript = {
     steps: ZillaScriptStep[];
 };
 export type ZillaScriptOptions = {
+    logger?: GenericLogger;
     continueOnInvalid?: boolean;
     continueOnError?: boolean;
     env?: Record<string, string>;
@@ -72,7 +74,10 @@ export type ZillaResponseValidationResult = {
     name: string;
     result: boolean;
     details: {
+        name: string;
         check: string;
+        rendered?: string;
+        error?: string;
         result: boolean;
     }[];
 };

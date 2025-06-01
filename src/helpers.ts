@@ -1,11 +1,16 @@
+import Handlebars from "handlebars";
 import { ZillaCaptureSource } from "./types.js";
 import { JSONPath } from "jsonpath-plus";
+import { isEmpty } from "zilla-util";
 
 const isComparable = (v: unknown): v is string | number =>
   typeof v === "string" || typeof v === "number";
 
 Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   /* plain equality always works (covers booleans too) */
+  if (op === "empty") return isEmpty(l);
+  if (op === "undefined") return typeof l === "undefined";
+  if (op === "null") return l == null;
   if (op === "==" || op === "!=") return op === "==" ? l == r : l != r;
 
   /* the rest require strictly comparable operands */
