@@ -31,6 +31,12 @@ Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
     ">=": (a, b) => a >= b,
     "<": (a, b) => a < b,
     "<=": (a, b) => a <= b,
+    startsWith: (a, b) => a.startsWith(b),
+    notStartsWith: (a, b) => !a.startsWith(b),
+    endsWith: (a, b) => a.endsWith(b),
+    notEndsWith: (a, b) => !a.endsWith(b),
+    includes: (a, b) => a.includes(b),
+    notIncludes: (a, b) => !a.includes(b),
   };
 
   const fn = typeof l === "number" ? numericOps[op] : stringOps[op]; // types match now
