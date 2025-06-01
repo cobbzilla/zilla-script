@@ -175,18 +175,25 @@ export const runZillaScript = async (
         hdrMap[headerName(name)] = value;
       });
 
+      const cx = {
+        ...vars,
+        body: resBody,
+        header: hdrMap,
+      };
+
       step.response?.validate?.forEach((validation) =>
         validation.check.forEach((expr) => {
           let rendered: string | undefined = undefined;
           try {
             rendered = Handlebars.compile(`{{${expr}}}`, {
               noEscape: true,
-            })({
-              ...vars,
-              body: resBody,
-              header: hdrMap,
-            });
+            })(cx);
             const pass = rendered.trim().toLowerCase() === "true";
+            if (!pass) {
+              logger.debug(
+                `FAILED step=${step.name} expr=${expr} cx=${JSON.stringify(cx)}`
+              );
+            }
             overall &&= pass;
             checkDetails.push({
               name: evalTpl(validation.name, ctx),
@@ -218,7 +225,8 @@ export const runZillaScript = async (
       if (!overall) {
         const msg = `validation failed in step ${
           step.name ?? "?"
-        }: ${JSON.stringify(checkDetails, null, 2)}`;
+        }: ${JSON.stringify(checkDetails, null, 2)}\n
+        cx=${JSON.stringify(cx, null, 2)}`;
         logger.error(msg);
         if (!opts.continueOnInvalid) throw new Error(msg);
       }
