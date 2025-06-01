@@ -59,7 +59,7 @@ export const runZillaScript = async (
               : step.vars[varName];
         }
       }
-      const rawUrl = new URL(step.request.uri, srv.base).toString();
+      const rawUrl = srv.base + step.request.uri;
       const url = rawUrl.includes("{{") ? evalTpl(rawUrl, ctx) : rawUrl;
 
       const method = step.request.method ?? "GET";
