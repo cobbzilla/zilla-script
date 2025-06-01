@@ -10,6 +10,7 @@ export type ZillaScriptServer = {
 };
 export type ZillaScriptInit = {
     servers: ZillaScriptServer[];
+    sessions?: Record<string, string>;
     vars?: Record<string, string | null>;
 };
 export type ZillaScriptHeader = {

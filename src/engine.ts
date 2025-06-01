@@ -26,7 +26,7 @@ export const runZillaScript = async (
     opts.init || {}
   ) as ZillaScriptInit;
   const vars: Record<string, unknown | null> = { ...init.vars };
-  const sessions: Record<string, string> = {};
+  const sessions: Record<string, string> = init.sessions || {};
 
   const servers = init.servers.map((s, i) => ({
     ...s,
