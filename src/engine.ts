@@ -2,6 +2,7 @@ import Handlebars from "handlebars";
 import {
   ZillaResponseValidationResult,
   ZillaScript,
+  ZillaScriptInit,
   ZillaScriptOptions,
   ZillaScriptResult,
   ZillaStepResult,
@@ -19,10 +20,15 @@ export const runZillaScript = async (
   const logger: GenericLogger = opts.logger ?? DEFAULT_LOGGER;
 
   const env = opts.env ?? {};
-  const vars: Record<string, unknown | null> = { ...script.init.vars };
+  const init = Object.assign(
+    {},
+    script.init || {},
+    opts.init || {}
+  ) as ZillaScriptInit;
+  const vars: Record<string, unknown | null> = { ...init.vars };
   const sessions: Record<string, string> = {};
 
-  const servers = script.init.servers.map((s, i) => ({
+  const servers = init.servers.map((s, i) => ({
     ...s,
     name: s.name ?? `default-${i}`,
     base: evalTpl(s.base, { env }),

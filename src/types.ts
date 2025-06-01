@@ -98,12 +98,13 @@ export type ZillaScriptStep = {
 
 export type ZillaScript = {
   name: string;
-  init: ZillaScriptInit;
+  init?: ZillaScriptInit;
   steps: ZillaScriptStep[];
 };
 
 export type ZillaScriptOptions = {
   logger?: GenericLogger;
+  init?: ZillaScriptInit;
   continueOnInvalid?: boolean; // if true, keep running steps even if a validation fails
   continueOnError?: boolean; // if true, keep running steps even if a non-validation error occurs
   env?: Record<string, string>; // environment variables, so we do not use process.env. If omitted, use {} and no env vars are defined.

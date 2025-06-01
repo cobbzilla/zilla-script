@@ -66,11 +66,12 @@ export type ZillaScriptStep = {
 };
 export type ZillaScript = {
     name: string;
-    init: ZillaScriptInit;
+    init?: ZillaScriptInit;
     steps: ZillaScriptStep[];
 };
 export type ZillaScriptOptions = {
     logger?: GenericLogger;
+    init?: ZillaScriptInit;
     continueOnInvalid?: boolean;
     continueOnError?: boolean;
     env?: Record<string, string>;

@@ -19,6 +19,7 @@ import { ZillaScript, runZillaScript } from "zilla-script";
 export const exampleScript: ZillaScript = {
     name: "example-script",
     // the init section describes configuration and initialization
+    // init data can also be passed on the opts object
     init: {
         // the "servers" array describes servers that we can interact with
         // each server must have a 'base' property to describe its base URL.
@@ -193,6 +194,9 @@ export const exampleScript: ZillaScript = {
     ],
 };
 
-const results = runZillaScript(exampleScript, { env: process.env });
+const results = runZillaScript(exampleScript, {
+    env: process.env, // supply environment variables
+    init: {} // override init declared within script
+});
 console.log(`Script results: ${JSON.stringify(results)}`);
 ```
