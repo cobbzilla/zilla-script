@@ -187,6 +187,7 @@ export const runZillaScript = async (
             overall &&= pass;
             checkDetails.push({
               name: validation.name,
+              rendered,
               check: expr,
               result: pass,
             });
