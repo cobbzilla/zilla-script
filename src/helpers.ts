@@ -40,6 +40,31 @@ Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   return fn(l as never, r as never);
 });
 
+Handlebars.registerHelper("length", (l: unknown, op: string, r: unknown) => {
+  const len = typeof l === "string" || Array.isArray(l) ? l.length : -1;
+  if (len === -1) {
+    throw new Error(`cannot get length for type ${typeof l}`);
+  }
+
+  if (typeof r !== "number" || r < 0) {
+    throw new Error(`right operand expected to be a positive number`);
+  }
+
+  const numericOps: Record<string, (a: number, b: number) => boolean> = {
+    "==": (a, b) => a == b,
+    "!=": (a, b) => a != b,
+    ">": (a, b) => a > b,
+    ">=": (a, b) => a >= b,
+    "<": (a, b) => a < b,
+    "<=": (a, b) => a <= b,
+  };
+  const fn = numericOps[op];
+  if (!fn) {
+    throw new Error(`unsupported operator ${op}`);
+  }
+  return fn(len, r);
+});
+
 export type Ctx = Record<string, unknown>;
 
 export const evalTpl = (tpl: string, ctx: Ctx): string =>
