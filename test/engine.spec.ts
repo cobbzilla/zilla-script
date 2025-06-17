@@ -120,7 +120,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
               {
                 id: "bodyCheck",
                 check: [
-                  "compare body.ok '==' true",
+                  "eq body.ok true",
                   "compare body.echoed.foo '==' 'bar'",
                 ],
               },
@@ -220,6 +220,23 @@ describe("ZillaScript engine – basic h3 integration", function () {
                   "compare testVar3.baz '==' 'snarf'", // edited, not quux!
                   "compare testVar3.fish '==' 42", // edited, added
                   "compare testVar4 '==' 'abcdef'",
+                  // test comparison operators
+                  "eq testVar3.fish 42",
+                  "neq testVar3.fish 0",
+                  "gt testVar3.fish 0",
+                  "gte testVar3.fish 42",
+                  "lt testVar3.fish 43",
+                  "lte testVar3.fish 42",
+                  "eq testVar4 'abcdef'",
+                  "neq testVar4 'abcdefg'",
+                  "lt testVar4 'abcdefg'",
+                  "lte testVar4 'abcdefg'",
+                  "startsWith testVar4 'abc'",
+                  "notStartsWith testVar4 'bc'",
+                  "endsWith testVar4 'def'",
+                  "notEndsWith testVar4 'de'",
+                  "includes testVar4 'cde'",
+                  "notIncludes testVar4 'z'",
                 ],
               },
             ],

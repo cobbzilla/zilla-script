@@ -54,6 +54,27 @@ Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   return fn(l as never, r as never);
 });
 
+const operatorHelpers: Array<[string, string]> = [
+  ["eq", "=="],
+  ["neq", "!="],
+  ["gt", ">"],
+  ["gte", ">="],
+  ["lt", "<"],
+  ["lte", "<="],
+  ["startsWith", "startsWith"],
+  ["notStartsWith", "notStartsWith"],
+  ["endsWith", "endsWith"],
+  ["notEndsWith", "notEndsWith"],
+  ["includes", "includes"],
+  ["notIncludes", "notIncludes"],
+];
+
+operatorHelpers.forEach(([name, op]: [string, string]): void =>
+  Handlebars.registerHelper(name, (l: unknown, r: unknown): boolean =>
+    Handlebars.helpers.compare(l, op, r)
+  )
+);
+
 Handlebars.registerHelper("length", (l: unknown, op: string, r: unknown) => {
   const len = typeof l === "string" || Array.isArray(l) ? l.length : -1;
   if (len === -1) {
