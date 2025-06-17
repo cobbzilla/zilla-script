@@ -23,6 +23,10 @@ const getMinimalPng = (): Buffer => {
   ]);
 };
 
+const getMinimalPngAsync = async (): Promise<Buffer> => {
+  return getMinimalPng();
+};
+
 describe("ZillaScript engine – basic h3 integration", function () {
   let server: ReturnType<typeof createServer>;
   let baseUrl = "";
@@ -271,13 +275,35 @@ describe("ZillaScript engine – basic h3 integration", function () {
             ],
           },
         },
+        {
+          step: "upload-step-with-async-function",
+          request: {
+            post: "upload",
+            files: { "async-file.png": getMinimalPngAsync() },
+          },
+          response: {
+            status: 200,
+            validate: [
+              {
+                id: "bodyCheck",
+                check: [
+                  "length body.files '==' 1",
+                  "eq body.files.[0].filename 'async-file.png'",
+                ],
+              },
+            ],
+          },
+        },
       ],
     };
 
     const result = await runZillaScript(script);
-    expect(result.stepResults).to.have.lengthOf(1);
-    const step = result.stepResults[0];
-    expect(step.status).to.equal(200);
-    expect(step.validation.result).to.be.true;
+    expect(result.stepResults).to.have.lengthOf(2);
+    const step0 = result.stepResults[0];
+    expect(step0.status).to.equal(200);
+    expect(step0.validation.result).to.be.true;
+    const step1 = result.stepResults[0];
+    expect(step1.status).to.equal(200);
+    expect(step1.validation.result).to.be.true;
   });
 });

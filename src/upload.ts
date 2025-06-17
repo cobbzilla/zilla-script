@@ -21,12 +21,13 @@ const bufferToStream = (
   });
 };
 
-export const formDataForFiles = (
-  files: Record<string, string | Buffer>
-): FormData => {
+export const formDataForFiles = async (
+  files: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>
+): Promise<FormData> => {
   const formData = new FormData();
 
-  for (const [filename, data] of Object.entries(files)) {
+  for (const [filename, dataOrPromise] of Object.entries(files)) {
+    const data = await dataOrPromise;
     const value =
       typeof data === "string" ? data : bufferToStream(data as Buffer);
     formData.append("files", value, {
@@ -43,7 +44,7 @@ export const upload = async (
   step: ZillaScriptStep,
   headers: Headers
 ): Promise<AxiosResponse> => {
-  const formData = formDataForFiles(step.request.files!);
+  const formData = await formDataForFiles(step.request.files!);
   return await axios.post(url, formData, {
     method: step.request.method || "POST",
     headers: toAxiosHeaders(headers, formData.getHeaders(), [

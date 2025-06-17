@@ -39,7 +39,7 @@ export type ZillaScriptRequest = {
     put?: string;
     patch?: string;
     delete?: string;
-    files?: Record<string, string | Buffer>;
+    files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
     method?: ZillaRequestMethod;
     session?: string;
     headers?: ZillaScriptHeader[];
