@@ -291,6 +291,7 @@ export const runZillaScript = async (
       const cx = {
         ...ctx,
         ...vars,
+        ...sessions,
         body: raw.body,
         header: hdrMap,
       };
