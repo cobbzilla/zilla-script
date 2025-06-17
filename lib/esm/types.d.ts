@@ -39,6 +39,7 @@ export type ZillaScriptRequest = {
     put?: string;
     patch?: string;
     delete?: string;
+    files?: Record<string, string | Buffer>;
     method?: ZillaRequestMethod;
     session?: string;
     headers?: ZillaScriptHeader[];

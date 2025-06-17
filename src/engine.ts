@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
+import { AxiosResponse } from "axios";
 import {
   ZillaRawResponse,
-  ZillaRawResponseHeaderArray,
   ZillaResponseValidationResult,
   ZillaScript,
   ZillaScriptInit,
@@ -12,11 +12,11 @@ import {
   ZillaScriptStep,
   ZillaStepResult,
 } from "./types.js";
-import { Ctx, evalTpl, extract, headerName, walk } from "./helpers.js";
+import { Ctx, evalTpl, walk } from "./helpers.js";
 import { DEFAULT_LOGGER, GenericLogger, isEmpty } from "zilla-util";
-
-export const toHeaderArray = (h: Headers): ZillaRawResponseHeaderArray =>
-  [...h.entries()].map(([name, value]) => ({ name, value }));
+import { headerName, parseAxiosResponse, parseResponse } from "./util.js";
+import { extract } from "./extract.js";
+import { upload } from "./upload.js";
 
 type ZillaScriptProcessedRequest = ZillaScriptRequest & {
   uri: string;
@@ -68,21 +68,6 @@ const processStep = (
     }
   }
   return step as ZillaScriptProcessedStep;
-};
-
-const parseResponse = async (res: Response): Promise<ZillaRawResponse> => {
-  const resHeadersArr = toHeaderArray(res.headers);
-  const resBody: object | string = (
-    res.headers.get("content-type") ?? ""
-  ).includes("application/json")
-    ? await res.json()
-    : await res.text();
-  return {
-    status: res.status,
-    statusText: res.statusText,
-    headers: resHeadersArr,
-    body: resBody,
-  };
 };
 
 export const runZillaScript = async (
@@ -212,8 +197,13 @@ export const runZillaScript = async (
       });
 
       /* ---------- send request ------------------------------------- */
-      const res = await fetch(url, { method, headers, body });
-      let raw: ZillaRawResponse = await parseResponse(res);
+      const useAxios = step.request.files;
+      const res = useAxios
+        ? await upload(url, step, headers)
+        : await fetch(url, { method, headers, body });
+      let raw: ZillaRawResponse = await (useAxios
+        ? parseAxiosResponse(res as AxiosResponse)
+        : parseResponse(res as Response));
 
       logger.info(`← ${res.status} ${method} ${url}`, raw);
 
@@ -231,7 +221,7 @@ export const runZillaScript = async (
           header: srv.session.header ? { name: srv.session.header } : undefined,
           cookie: srv.session.cookie ? { name: srv.session.cookie } : undefined,
         };
-        const tok = extract("session", strategy, raw.body, res.headers, {});
+        const tok = extract("session", strategy, raw.body, raw.headers, {});
         if (typeof tok === "string") {
           sessions[step.response.session.name] = tok;
           logger.info(`captured session "${step.response.session.name}"`, tok);
@@ -246,7 +236,7 @@ export const runZillaScript = async (
       /* ---------- capture vars ------------------------------------- */
       if (step.response?.vars) {
         for (const [v, src] of Object.entries(step.response.vars)) {
-          const val = extract(v, src, raw.body, res.headers, vars);
+          const val = extract(v, src, raw.body, raw.headers, vars);
           vars[v] = val;
           logger.debug(`captured var ${v}`, val);
         }

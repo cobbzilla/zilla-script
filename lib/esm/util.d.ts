@@ -1,0 +1,9 @@
+import { AxiosResponse, AxiosRequestHeaders } from "axios";
+import { ZillaRawResponse, ZillaRawResponseHeaderArray } from "./types.js";
+import FormData from "form-data";
+export declare const headerName: (h: string) => string;
+export declare const firstHeader: (headers: ZillaRawResponseHeaderArray, name: string) => string | null;
+export declare const toHeaderArray: (h: Headers) => ZillaRawResponseHeaderArray;
+export declare const parseResponse: (res: Response) => Promise<ZillaRawResponse>;
+export declare const parseAxiosResponse: <T = unknown>(res: AxiosResponse<T>) => Promise<ZillaRawResponse>;
+export declare const toAxiosHeaders: (h: Headers, formHeaders: FormData.Headers, omit: string[]) => AxiosRequestHeaders;

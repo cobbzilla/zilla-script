@@ -1,6 +1,6 @@
 {
   "name": "zilla-script",
-  "version": "0.0.36",
+  "version": "1.0.1",
   "type": "module",
   "description": "Simple testing framework for REST API testing",
   "keywords": [
@@ -43,11 +43,13 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.20.0",
+    "@types/busboy": "^1.5.4",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^22.15.29",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
+    "busboy": "^1.6.0",
     "chai": "^4.3.6",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
@@ -68,6 +70,8 @@
     ]
   },
   "dependencies": {
+    "axios": "^1.10.0",
+    "form-data": "^4.0.3",
     "jsonpath-plus": "^10.3.0"
   }
 }

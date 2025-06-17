@@ -1,16 +1,6 @@
 import { expect } from "chai";
-import {
-  createApp,
-  createRouter,
-  eventHandler,
-  getHeader,
-  readBody,
-  setHeader,
-  toNodeListener,
-} from "h3";
 import { createServer } from "node:http";
 import { AddressInfo } from "node:net";
-import { uuidv4 } from "zilla-util";
 import {
   runZillaScript,
   ZillaRawResponse,
@@ -19,6 +9,19 @@ import {
   ZillaScriptResult,
   ZillaScriptVars,
 } from "../src/index.js";
+import { createServerHarness } from "./harness.js";
+
+// a 1-pixel PNG
+const getMinimalPng = (): Buffer => {
+  return Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+    0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x60, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, 0x33, 0x00, 0x00, 0x00, 0x00, 0x49,
+    0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  ]);
+};
 
 describe("ZillaScript engine – basic h3 integration", function () {
   let server: ReturnType<typeof createServer>;
@@ -27,73 +30,20 @@ describe("ZillaScript engine – basic h3 integration", function () {
   /* in-memory session store: token → Record<string,string> */
   const sessions = new Map<string, Record<string, string>>();
 
-  /* ------------------------------------------------------------------ */
   before(async () => {
-    const router = createRouter();
-
-    /* original echo endpoint ---------------------------------------- */
-    router.post(
-      "/test",
-      eventHandler(async (event) => {
-        const body = await readBody<{ foo: string }>(event);
-        return { ok: true, echoed: body };
-      })
-    );
-
-    /* PUT /session  -> new session ---------------------------------- */
-    router.put(
-      "/session",
-      eventHandler(async (event) => {
-        const token = uuidv4();
-        sessions.set(token, {});
-        /* send session token via Set-Cookie */
-        setHeader(event, "Set-Cookie", `sess=${token}; Path=/`);
-        return {};
-      })
-    );
-
-    /* POST /session  -> add data to session -------------------------- */
-    router.post(
-      "/session",
-      eventHandler(async (event) => {
-        const token =
-          getHeader(event, "cookie")?.match(/sess=([^;]+)/)?.[1] ?? "";
-        const payload = await readBody<Record<string, string>>(event);
-        if (!sessions.has(token)) sessions.set(token, {});
-        Object.assign(sessions.get(token)!, payload);
-        return { ok: true };
-      })
-    );
-
-    /* GET /session  -> return session data --------------------------- */
-    router.get(
-      "/session",
-      eventHandler((event) => {
-        const token =
-          getHeader(event, "cookie")?.match(/sess=([^;]+)/)?.[1] ?? "";
-        return sessions.get(token) ?? {};
-      })
-    );
-
-    /* wire up router ------------------------------------------------- */
-    const app = createApp();
-    app.use(router);
-    server = createServer(toNodeListener(app));
-
+    server = await createServerHarness(sessions);
     /* listen on a random free port for parallel CI friendliness ------ */
     await new Promise<void>((resolve) => server.listen(0, resolve));
     const { port } = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${port}/`;
   });
 
-  /* ------------------------------------------------------------------ */
   after(async () => {
     await new Promise<void>((resolve, reject) =>
       server.close((err) => (err ? reject(err) : resolve()))
     );
   });
 
-  /* ------------------------------------------------------------------ */
   it("handles a simple POST and passes validation", async () => {
     const script: ZillaScript = {
       script: "post-echo",
@@ -141,7 +91,6 @@ describe("ZillaScript engine – basic h3 integration", function () {
     expect(step.body).to.deep.equal({ ok: true, echoed: { foo: "bar" } });
   });
 
-  /* ------------------------------------------------------------------ */
   it("creates two independent sessions and manipulates data", async () => {
     const script: ZillaScript = {
       script: "session-manipulation",
@@ -153,7 +102,6 @@ describe("ZillaScript engine – basic h3 integration", function () {
             session: { cookie: "sess" },
           },
         ],
-        vars: {},
         handlers: {
           add_42_to_number: (
             raw: ZillaRawResponse,
@@ -290,5 +238,46 @@ describe("ZillaScript engine – basic h3 integration", function () {
     expect(last.status).to.equal(200);
     expect(last.body).to.deep.equal({});
     expect(last.validation.result).to.be.true;
+  });
+
+  it("uploads some files", async () => {
+    const script: ZillaScript = {
+      script: "upload-files",
+      init: {
+        servers: [
+          {
+            server: "local",
+            base: baseUrl,
+          },
+        ],
+      },
+      steps: [
+        {
+          step: "upload-step",
+          request: {
+            post: "upload",
+            files: { "first-file.png": getMinimalPng() },
+          },
+          response: {
+            status: 200,
+            validate: [
+              {
+                id: "bodyCheck",
+                check: [
+                  "length body.files '==' 1",
+                  "eq body.files.[0].filename 'first-file.png'",
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = await runZillaScript(script);
+    expect(result.stepResults).to.have.lengthOf(1);
+    const step = result.stepResults[0];
+    expect(step.status).to.equal(200);
+    expect(step.validation.result).to.be.true;
   });
 });

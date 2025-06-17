@@ -61,6 +61,7 @@ export type ZillaScriptRequest = {
   put?: string;
   patch?: string;
   delete?: string;
+  files?: Record<string, string | Buffer>;
   method?: ZillaRequestMethod;
   session?: string; // name of a session to use. the session must have been captured in an earlier step
   headers?: ZillaScriptHeader[];
