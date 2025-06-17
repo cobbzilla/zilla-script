@@ -261,7 +261,7 @@ export const runZillaScript = async (
       raw.headers.forEach(({ name, value }) => {
         hdrMap[headerName(name)] = value;
       });
-      const cx = {
+      const cx: Record<string, unknown> = {
         ...ctx,
         ...vars,
         ...sessions,
@@ -278,14 +278,20 @@ export const runZillaScript = async (
             logger.error(`handler not found: ${h}`);
           }
           const args = handlerParts.length > 1 ? handlerParts.slice(1) : [];
+          const varsForHandler = { ...vars, ...sessions };
+          const origKeys = Object.keys(varsForHandler);
           raw = await handler(
             raw,
             args.map((a) => evalTpl(a, cx)),
-            vars,
+            varsForHandler,
             step
           );
+          for (const [k, v] of Object.entries(varsForHandler)) {
+            if (!origKeys.includes(k)) {
+              cx[k] = vars[k] = v;
+            }
+          }
         }
-        Object.assign(cx, vars);
       }
 
       /* ---------- validation: status check first ------------------- */
