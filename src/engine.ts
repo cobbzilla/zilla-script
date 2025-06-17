@@ -289,6 +289,7 @@ export const runZillaScript = async (
       });
 
       const cx = {
+        ...ctx,
         ...vars,
         body: raw.body,
         header: hdrMap,
@@ -297,6 +298,7 @@ export const runZillaScript = async (
       step.response?.validate?.forEach((validation) =>
         validation.check.forEach((expr) => {
           let rendered: string | undefined = undefined;
+          const validationId = evalTpl(validation.id, ctx);
           try {
             rendered = Handlebars.compile(`{{${expr}}}`, {
               noEscape: true,
@@ -309,7 +311,7 @@ export const runZillaScript = async (
             }
             overall &&= pass;
             checkDetails.push({
-              name: evalTpl(validation.id, ctx),
+              name: validationId,
               rendered,
               check: expr,
               result: pass,
@@ -318,7 +320,7 @@ export const runZillaScript = async (
           } catch (err) {
             overall = false;
             checkDetails.push({
-              name: evalTpl(validation.id, ctx),
+              name: validationId,
               check: expr,
               rendered,
               error: (err as Error).message,
