@@ -4,14 +4,53 @@ import {
   ZillaScript,
   ZillaScriptInit,
   ZillaScriptOptions,
+  ZillaScriptRequest,
   ZillaScriptResult,
+  ZillaScriptStep,
   ZillaStepResult,
 } from "./types.js";
 import { Ctx, evalTpl, extract, headerName, walk } from "./helpers.js";
-import { DEFAULT_LOGGER, GenericLogger } from "zilla-util";
+import { DEFAULT_LOGGER, GenericLogger, isEmpty } from "zilla-util";
 
 export const toHeaderArray = (h: Headers): { name: string; value: string }[] =>
   [...h.entries()].map(([name, value]) => ({ name, value }));
+
+type ZillaScriptProcessedRequest = ZillaScriptRequest & {
+  uri: string;
+};
+
+type ZillaScriptProcessedStep = ZillaScriptStep & {
+  request: ZillaScriptProcessedRequest;
+};
+
+const processStep = (step: ZillaScriptStep): ZillaScriptProcessedStep => {
+  if (step.request.get) {
+    step.request.uri = step.request.get;
+    step.request.method = "GET";
+  } else if (step.request.head) {
+    step.request.uri = step.request.head;
+    step.request.method = "HEAD";
+  } else if (step.request.post) {
+    step.request.uri = step.request.post;
+    step.request.method = "POST";
+  } else if (step.request.put) {
+    step.request.uri = step.request.put;
+    step.request.method = "PUT";
+  } else if (step.request.patch) {
+    step.request.uri = step.request.patch;
+    step.request.method = "PATCH";
+  } else if (step.request.delete) {
+    step.request.uri = step.request.delete;
+    step.request.method = "DELETE";
+  } else if (isEmpty(step.request.uri)) {
+    throw new Error(
+      `ERROR No URI specified for step.request=${JSON.stringify(step.request)}`
+    );
+  } else if (isEmpty(step.request.method)) {
+    step.request.method = "GET";
+  }
+  return step as ZillaScriptProcessedStep;
+};
 
 export const runZillaScript = async (
   script: ZillaScript,
@@ -42,7 +81,8 @@ export const runZillaScript = async (
 
   logger.info(`starting script "${script.script}"`);
 
-  for (const step of script.steps) {
+  const steps: ZillaScriptProcessedStep[] = script.steps.map(processStep);
+  for (const step of steps) {
     logger.info(`step "${step.step ?? "(unnamed)"}" begin`);
 
     /* create containers so we can still inspect them if an early error aborts */

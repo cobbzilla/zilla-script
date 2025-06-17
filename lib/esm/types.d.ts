@@ -19,7 +19,13 @@ export type ZillaScriptHeader = {
 };
 export type ZillaRequestMethod = "GET" | "HEAD" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "CONNECT" | "TRACE";
 export type ZillaScriptRequest = {
-    uri: string;
+    uri?: string;
+    get?: string;
+    head?: string;
+    post?: string;
+    put?: string;
+    patch?: string;
+    delete?: string;
     method?: ZillaRequestMethod;
     session?: string;
     headers?: ZillaScriptHeader[];

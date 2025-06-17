@@ -35,7 +35,13 @@ export type ZillaRequestMethod =
   | "TRACE";
 
 export type ZillaScriptRequest = {
-  uri: string;
+  uri?: string;
+  get?: string;
+  head?: string;
+  post?: string;
+  put?: string;
+  patch?: string;
+  delete?: string;
   method?: ZillaRequestMethod;
   session?: string; // name of a session to use. the session must have been captured in an earlier step
   headers?: ZillaScriptHeader[];

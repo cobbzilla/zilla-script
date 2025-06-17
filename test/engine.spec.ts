@@ -109,8 +109,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         {
           step: "post-step",
           request: {
-            method: "POST",
-            uri: "test",
+            post: "test",
             body: { foo: "bar" },
           },
           response: {
@@ -158,7 +157,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         /* --- session-one starts ------------------------------------ */
         {
           step: "start-session-one",
-          request: { method: "PUT", uri: "session" },
+          request: { put: "session" },
           response: {
             status: 200,
             session: {
@@ -171,8 +170,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         {
           step: "add-to-session-one",
           request: {
-            method: "POST",
-            uri: "session",
+            post: "session",
             session: "session-one",
             body: { a: "1", b: "2", c: "3" },
           },
@@ -192,8 +190,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             testVar3: { baz: "snarf", fish: 42 },
           },
           request: {
-            method: "GET",
-            uri: "session",
+            get: "session",
             session: "session-one",
           },
           response: {
@@ -219,7 +216,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         /* --- session-two starts ------------------------------------ */
         {
           step: "start-session-two",
-          request: { method: "PUT", uri: "session" },
+          request: { put: "session" },
           response: {
             status: 200,
             session: { name: "session-two" }, // omitting capture method, we use the server's method
@@ -229,8 +226,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
         {
           step: "get-session-two",
           request: {
-            method: "GET",
-            uri: "session",
+            get: "session",
             session: "session-two",
           },
           response: {

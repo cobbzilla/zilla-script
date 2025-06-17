@@ -70,8 +70,8 @@ importers:
         specifier: ^5.7.3
         version: 5.8.3
       zilla-util:
-        specifier: ^1.2.9
-        version: 1.2.9
+        specifier: ^1.2.14
+        version: 1.2.14
 
 packages:
 
@@ -651,6 +651,9 @@ packages:
     resolution: {integrity: sha512-7ACyT3wmyp3I61S4fG682L0VA2RGD9otkqGJIwNUMF1SWUombIIk+af1unuDYgMm082aHYwD+mzJvv9Iu8dsgg==}
     engines: {node: '>=18'}
 
+  grapheme-splitter@1.0.4:
+    resolution: {integrity: sha512-bzh50DW9kTPM00T8y4o8vQg89Di9oLJVLW/KaOGIXJWP/iqCN6WKYkbNOF04vFLJhwcpYUh9ydh/+5vpOqV4YQ==}
+
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
@@ -1038,8 +1041,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zilla-util@1.2.9:
-    resolution: {integrity: sha512-AZYdoJghk5W0ut++9hjBG3Ddfa+HvVA/Iv7BMO6gLKgSkEdK47nHiSHL2jpEWNxwVMEPhx1EXNq3C5pAyL9XSQ==}
+  zilla-util@1.2.14:
+    resolution: {integrity: sha512-DZ/ArVoSfVi7jV1Flo4DakYY0I+N9Y4O3eB9cPL/d+wQ5EFa7AQyj01FPYmM1zMf4BDCQP4/W8ZFJ/N5TanDiA==}
 
 snapshots:
 
@@ -1607,6 +1610,8 @@ snapshots:
 
   globals@15.15.0: {}
 
+  grapheme-splitter@1.0.4: {}
+
   graphemer@1.4.0: {}
 
   h3@1.15.3:
@@ -1964,4 +1969,6 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zilla-util@1.2.9: {}
+  zilla-util@1.2.14:
+    dependencies:
+      grapheme-splitter: 1.0.4
