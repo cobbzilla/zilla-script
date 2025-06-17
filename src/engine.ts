@@ -60,7 +60,7 @@ const processStep = (
       step.handler = [step.handler];
     }
     for (const h of step.handler) {
-      if (!Object.keys(handlers).includes(h)) {
+      if (!Object.keys(handlers).includes(h.split(" ")[0])) {
         throw new Error(
           `ERROR handler=${h} not found for step=${JSON.stringify(step)}`
         );
@@ -250,11 +250,13 @@ export const runZillaScript = async (
       /* ---------- call handlers ------------------------------------ */
       if (step.handler) {
         for (const h of step.handler) {
-          const handler = handlers[h];
+          const handlerParts = h.split(" ");
+          const handler = handlers[handlerParts[0]];
           if (!handler) {
             logger.error(`handler not found: ${h}`);
           }
-          raw = await handler(step, vars, raw);
+          const args = handlerParts.length > 1 ? handlerParts.slice(1) : [];
+          raw = await handler(raw, args, vars, step);
         }
       }
 

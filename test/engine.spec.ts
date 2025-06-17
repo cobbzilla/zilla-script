@@ -17,6 +17,7 @@ import {
   ZillaScript,
   ZillaScriptOptions,
   ZillaScriptResult,
+  ZillaScriptVars,
 } from "../src/index.js";
 
 describe("ZillaScript engine – basic h3 integration", function () {
@@ -154,8 +155,12 @@ describe("ZillaScript engine – basic h3 integration", function () {
         ],
         vars: {},
         handlers: {
-          define_new_variable: (step, vars, raw: ZillaRawResponse) => {
-            vars.new_var = 42;
+          add_42_to_number: (
+            raw: ZillaRawResponse,
+            args: string[],
+            vars: ZillaScriptVars
+          ) => {
+            vars.new_var = 42 + parseInt(args[0]);
             return raw;
           },
         },
@@ -236,7 +241,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             get: "session",
             session: "session-two",
           },
-          handler: "define_new_variable",
+          handler: "add_42_to_number 11",
           response: {
             status: 200,
             validate: [
@@ -247,7 +252,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
                   "compare body.a 'undefined'", // body.a is undefined
                   "compare body.b 'undefined'", // body.b is undefined
                   "compare body.c 'undefined'", // body.c is undefined
-                  "compare new_var '==' 42", // handler define_new_variable creates this
+                  "compare new_var '==' 53", // handler add_42_to_number creates this
                 ],
               },
             ],

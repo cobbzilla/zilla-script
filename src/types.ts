@@ -21,10 +21,13 @@ export type ZillaRawResponse = {
   body: string | object;
 };
 
+export type ZillaScriptVars = Record<string, unknown | null>;
+
 export type ZillaScriptResponseHandler = (
-  step: ZillaScriptStep,
-  vars: Record<string, unknown | null>,
-  response: ZillaRawResponse
+  response: ZillaRawResponse,
+  args: string[],
+  vars: ZillaScriptVars,
+  step: ZillaScriptStep
 ) => ZillaRawResponse | Promise<ZillaRawResponse>;
 
 export type ZillaScriptInit = {
@@ -114,7 +117,7 @@ export type ZillaScriptStep = {
   step?: string;
   comment?: string;
   server?: string;
-  vars?: Record<string, unknown | null>;
+  vars?: ZillaScriptVars;
   edits?: Record<string, unknown>;
   request: ZillaScriptRequest;
   response?: ZillaScriptResponse; // if response is omitted, we only validate that status must be 200
@@ -152,7 +155,7 @@ export type ZillaStepResult = {
   headers: ZillaScriptHeader[];
   body: object | string | number | boolean;
   validation: ZillaResponseValidationResult;
-  vars: Record<string, unknown | null>; // current values for all vars
+  vars: ZillaScriptVars; // current values for all vars
   sessions: Record<string, string>; // current session tokens for all sessions
 };
 

@@ -18,7 +18,8 @@ export type ZillaRawResponse = {
     headers: ZillaRawResponseHeaderArray;
     body: string | object;
 };
-export type ZillaScriptResponseHandler = (step: ZillaScriptStep, vars: Record<string, unknown | null>, response: ZillaRawResponse) => ZillaRawResponse | Promise<ZillaRawResponse>;
+export type ZillaScriptVars = Record<string, unknown | null>;
+export type ZillaScriptResponseHandler = (response: ZillaRawResponse, args: string[], vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | Promise<ZillaRawResponse>;
 export type ZillaScriptInit = {
     servers?: ZillaScriptServer[];
     sessions?: Record<string, string>;
@@ -79,7 +80,7 @@ export type ZillaScriptStep = {
     step?: string;
     comment?: string;
     server?: string;
-    vars?: Record<string, unknown | null>;
+    vars?: ZillaScriptVars;
     edits?: Record<string, unknown>;
     request: ZillaScriptRequest;
     response?: ZillaScriptResponse;
@@ -113,7 +114,7 @@ export type ZillaStepResult = {
     headers: ZillaScriptHeader[];
     body: object | string | number | boolean;
     validation: ZillaResponseValidationResult;
-    vars: Record<string, unknown | null>;
+    vars: ZillaScriptVars;
     sessions: Record<string, string>;
 };
 export type ZillaScriptResult = {
