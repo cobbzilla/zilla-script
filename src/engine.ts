@@ -13,7 +13,13 @@ import {
   ZillaStepResult,
 } from "./types.js";
 import { Ctx, evalTpl, walk } from "./helpers.js";
-import { DEFAULT_LOGGER, GenericLogger, isEmpty } from "zilla-util";
+import {
+  DEFAULT_LOGGER,
+  GenericLogger,
+  isEmpty,
+  parseSimpleTime,
+  sleep,
+} from "zilla-util";
 import { headerName, parseAxiosResponse, parseResponse } from "./util.js";
 import { extract } from "./extract.js";
 import { upload } from "./upload.js";
@@ -106,6 +112,14 @@ export const runZillaScript = async (
     processStep(step, handlers)
   );
   for (const step of steps) {
+    if (step.delay) {
+      logger.info(`step "${step.step ?? "(unnamed)"}" delaying ${step.delay}`);
+      await sleep(
+        typeof step.delay === "number"
+          ? step.delay
+          : parseSimpleTime(step.delay)
+      );
+    }
     logger.info(`step "${step.step ?? "(unnamed)"}" begin`);
 
     /* create containers so we can still inspect them if an early error aborts */

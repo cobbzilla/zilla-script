@@ -79,6 +79,7 @@ export type ZillaScriptResponse = {
 };
 export type ZillaScriptStep = {
     step?: string;
+    delay?: number | string;
     comment?: string;
     server?: string;
     vars?: ZillaScriptVars;
