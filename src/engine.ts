@@ -1,10 +1,13 @@
 import Handlebars from "handlebars";
 import {
+  ZillaRawResponse,
+  ZillaRawResponseHeaderArray,
   ZillaResponseValidationResult,
   ZillaScript,
   ZillaScriptInit,
   ZillaScriptOptions,
   ZillaScriptRequest,
+  ZillaScriptResponseHandler,
   ZillaScriptResult,
   ZillaScriptStep,
   ZillaStepResult,
@@ -12,7 +15,7 @@ import {
 import { Ctx, evalTpl, extract, headerName, walk } from "./helpers.js";
 import { DEFAULT_LOGGER, GenericLogger, isEmpty } from "zilla-util";
 
-export const toHeaderArray = (h: Headers): { name: string; value: string }[] =>
+export const toHeaderArray = (h: Headers): ZillaRawResponseHeaderArray =>
   [...h.entries()].map(([name, value]) => ({ name, value }));
 
 type ZillaScriptProcessedRequest = ZillaScriptRequest & {
@@ -23,7 +26,10 @@ type ZillaScriptProcessedStep = ZillaScriptStep & {
   request: ZillaScriptProcessedRequest;
 };
 
-const processStep = (step: ZillaScriptStep): ZillaScriptProcessedStep => {
+const processStep = (
+  step: ZillaScriptStep,
+  handlers: Record<string, ZillaScriptResponseHandler>
+): ZillaScriptProcessedStep => {
   if (step.request.get) {
     step.request.uri = step.request.get;
     step.request.method = "GET";
@@ -49,7 +55,34 @@ const processStep = (step: ZillaScriptStep): ZillaScriptProcessedStep => {
   } else if (isEmpty(step.request.method)) {
     step.request.method = "GET";
   }
+  if (step.handler) {
+    if (typeof step.handler === "string") {
+      step.handler = [step.handler];
+    }
+    for (const h of step.handler) {
+      if (!Object.keys(handlers).includes(h)) {
+        throw new Error(
+          `ERROR handler=${h} not found for step=${JSON.stringify(step)}`
+        );
+      }
+    }
+  }
   return step as ZillaScriptProcessedStep;
+};
+
+const parseResponse = async (res: Response): Promise<ZillaRawResponse> => {
+  const resHeadersArr = toHeaderArray(res.headers);
+  const resBody: object | string = (
+    res.headers.get("content-type") ?? ""
+  ).includes("application/json")
+    ? await res.json()
+    : await res.text();
+  return {
+    status: res.status,
+    statusText: res.statusText,
+    headers: resHeadersArr,
+    body: resBody,
+  };
 };
 
 export const runZillaScript = async (
@@ -68,6 +101,9 @@ export const runZillaScript = async (
     throw new Error(`script=${script.script} has no servers defined in init`);
   }
   const vars: Record<string, unknown | null> = { ...init.vars };
+  const handlers: Record<string, ZillaScriptResponseHandler> = {
+    ...init.handlers,
+  };
   const sessions: Record<string, string> = init.sessions || {};
 
   const servers = init.servers.map((s, i) => ({
@@ -81,7 +117,9 @@ export const runZillaScript = async (
 
   logger.info(`starting script "${script.script}"`);
 
-  const steps: ZillaScriptProcessedStep[] = script.steps.map(processStep);
+  const steps: ZillaScriptProcessedStep[] = script.steps.map((step) =>
+    processStep(step, handlers)
+  );
   for (const step of steps) {
     logger.info(`step "${step.step ?? "(unnamed)"}" begin`);
 
@@ -170,18 +208,9 @@ export const runZillaScript = async (
 
       /* ---------- send request ------------------------------------- */
       const res = await fetch(url, { method, headers, body });
+      let raw: ZillaRawResponse = await parseResponse(res);
 
-      const resHeadersArr = toHeaderArray(res.headers);
-      const resBody: object | string = (
-        res.headers.get("content-type") ?? ""
-      ).includes("application/json")
-        ? await res.json()
-        : await res.text();
-
-      logger.info(`← ${res.status} ${method} ${url}`, {
-        headers: resHeadersArr,
-        body: resBody,
-      });
+      logger.info(`← ${res.status} ${method} ${url}`, raw);
 
       /* ---------- capture session ---------------------------------- */
       if (step.response?.session) {
@@ -197,7 +226,7 @@ export const runZillaScript = async (
           header: srv.session.header ? { name: srv.session.header } : undefined,
           cookie: srv.session.cookie ? { name: srv.session.cookie } : undefined,
         };
-        const tok = extract("session", strategy, resBody, res.headers, {});
+        const tok = extract("session", strategy, raw.body, res.headers, {});
         if (typeof tok === "string") {
           sessions[step.response.session.name] = tok;
           logger.info(`captured session "${step.response.session.name}"`, tok);
@@ -212,9 +241,20 @@ export const runZillaScript = async (
       /* ---------- capture vars ------------------------------------- */
       if (step.response?.vars) {
         for (const [v, src] of Object.entries(step.response.vars)) {
-          const val = extract(v, src, resBody, res.headers, vars);
+          const val = extract(v, src, raw.body, res.headers, vars);
           vars[v] = val;
           logger.debug(`captured var ${v}`, val);
+        }
+      }
+
+      /* ---------- call handlers ------------------------------------ */
+      if (step.handler) {
+        for (const h of step.handler) {
+          const handler = handlers[h];
+          if (!handler) {
+            logger.error(`handler not found: ${h}`);
+          }
+          raw = await handler(step, vars, raw);
         }
       }
 
@@ -222,28 +262,28 @@ export const runZillaScript = async (
       let statusPass;
       const expectedStatus = step.response?.status ?? null;
       if (expectedStatus) {
-        statusPass = res.status === expectedStatus;
+        statusPass = raw.status === expectedStatus;
       } else {
         const expectedClass = step.response?.statusClass ?? `2xx`;
-        statusPass = `${Math.floor(res.status / 100)}xx` === expectedClass;
+        statusPass = `${Math.floor(raw.status / 100)}xx` === expectedClass;
       }
 
       overall &&= statusPass;
       checkDetails.push({
         name: "status",
-        check: `status ${res.status}`,
+        check: `status ${raw.status}`,
         result: statusPass,
       });
 
       /* ---------- validation: custom checks ------------------------ */
       const hdrMap: Record<string, string> = {};
-      resHeadersArr.forEach(({ name, value }) => {
+      raw.headers.forEach(({ name, value }) => {
         hdrMap[headerName(name)] = value;
       });
 
       const cx = {
         ...vars,
-        body: resBody,
+        body: raw.body,
         header: hdrMap,
       };
 
@@ -299,9 +339,9 @@ export const runZillaScript = async (
 
       /* ---------- assemble step result ----------------------------- */
       stepResults.push({
-        status: res.status,
-        headers: resHeadersArr,
-        body: resBody,
+        status: raw.status,
+        headers: raw.headers,
+        body: raw.body,
         validation,
         vars: { ...vars },
         sessions: { ...sessions },

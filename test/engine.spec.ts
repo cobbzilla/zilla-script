@@ -13,6 +13,7 @@ import { AddressInfo } from "node:net";
 import { uuidv4 } from "zilla-util";
 import {
   runZillaScript,
+  ZillaRawResponse,
   ZillaScript,
   ZillaScriptOptions,
   ZillaScriptResult,
@@ -152,6 +153,12 @@ describe("ZillaScript engine – basic h3 integration", function () {
           },
         ],
         vars: {},
+        handlers: {
+          define_new_variable: (step, vars, raw: ZillaRawResponse) => {
+            vars.new_var = 42;
+            return raw;
+          },
+        },
       },
       steps: [
         /* --- session-one starts ------------------------------------ */
@@ -229,6 +236,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
             get: "session",
             session: "session-two",
           },
+          handler: "define_new_variable",
           response: {
             status: 200,
             validate: [
@@ -239,6 +247,7 @@ describe("ZillaScript engine – basic h3 integration", function () {
                   "compare body.a 'undefined'", // body.a is undefined
                   "compare body.b 'undefined'", // body.b is undefined
                   "compare body.c 'undefined'", // body.c is undefined
+                  "compare new_var '==' 42", // handler define_new_variable creates this
                 ],
               },
             ],

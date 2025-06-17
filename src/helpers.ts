@@ -14,8 +14,16 @@ Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   if (op === "==" || op === "!=") return op === "==" ? l == r : l != r;
 
   /* the rest require strictly comparable operands */
-  if (!isComparable(l) || !isComparable(r))
-    throw new Error(`operator ${op} requires string | number operands`);
+  if (!isComparable(l)) {
+    throw new Error(
+      `operator ${op} requires string | number operands: invalid left operand: ${l}`
+    );
+  }
+  if (!isComparable(r)) {
+    throw new Error(
+      `operator ${op} requires string | number operands: invalid right operand: ${r}`
+    );
+  }
   if (typeof l !== typeof r)
     throw new Error(`operator ${op} requires operands of the same type`);
 

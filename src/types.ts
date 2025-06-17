@@ -12,10 +12,26 @@ export type ZillaScriptServer = {
   session?: ZillaScriptSendSession;
 };
 
+export type ZillaRawResponseHeaderArray = { name: string; value: string }[];
+
+export type ZillaRawResponse = {
+  status: number;
+  statusText?: string;
+  headers: ZillaRawResponseHeaderArray;
+  body: string | object;
+};
+
+export type ZillaScriptResponseHandler = (
+  step: ZillaScriptStep,
+  vars: Record<string, unknown | null>,
+  response: ZillaRawResponse
+) => ZillaRawResponse | Promise<ZillaRawResponse>;
+
 export type ZillaScriptInit = {
   servers?: ZillaScriptServer[];
   sessions?: Record<string, string>; // existing sessions, name->token
   vars?: Record<string, string | null>; // predefined vars
+  handlers?: Record<string, ZillaScriptResponseHandler>;
 };
 
 export type ZillaScriptHeader = {
@@ -102,6 +118,7 @@ export type ZillaScriptStep = {
   edits?: Record<string, unknown>;
   request: ZillaScriptRequest;
   response?: ZillaScriptResponse; // if response is omitted, we only validate that status must be 200
+  handler?: string | string[]; // name of handler to call before validation
 };
 
 export type ZillaScript = {
