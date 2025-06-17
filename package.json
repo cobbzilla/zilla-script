@@ -1,6 +1,6 @@
 {
   "name": "zilla-script",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "type": "module",
   "description": "Simple testing framework for REST API testing",
   "keywords": [

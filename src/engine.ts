@@ -139,6 +139,11 @@ export const runZillaScript = async (
       /* ---------- url / headers / body ----------------------------- */
       const ctx: Ctx = { ...vars, env };
       if (step.vars) {
+        // add session IDs to context
+        for (const sessName of Object.keys(sessions)) {
+          ctx[sessName] = sessions[sessName];
+        }
+        // add variables to context
         for (const varName of Object.keys(step.vars)) {
           vars[varName] = ctx[varName] =
             typeof step.vars[varName] === "string"
