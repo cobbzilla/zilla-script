@@ -256,6 +256,19 @@ export const runZillaScript = async (
         }
       }
 
+      /* ---------- set handlebars context ---------------------------- */
+      const hdrMap: Record<string, string> = {};
+      raw.headers.forEach(({ name, value }) => {
+        hdrMap[headerName(name)] = value;
+      });
+      const cx = {
+        ...ctx,
+        ...vars,
+        ...sessions,
+        body: raw.body,
+        header: hdrMap,
+      };
+
       /* ---------- call handlers ------------------------------------ */
       if (step.handler) {
         for (const h of step.handler) {
@@ -265,8 +278,14 @@ export const runZillaScript = async (
             logger.error(`handler not found: ${h}`);
           }
           const args = handlerParts.length > 1 ? handlerParts.slice(1) : [];
-          raw = await handler(raw, args, vars, step);
+          raw = await handler(
+            raw,
+            args.map((a) => evalTpl(a, cx)),
+            vars,
+            step
+          );
         }
+        Object.assign(cx, vars);
       }
 
       /* ---------- validation: status check first ------------------- */
@@ -287,19 +306,6 @@ export const runZillaScript = async (
       });
 
       /* ---------- validation: custom checks ------------------------ */
-      const hdrMap: Record<string, string> = {};
-      raw.headers.forEach(({ name, value }) => {
-        hdrMap[headerName(name)] = value;
-      });
-
-      const cx = {
-        ...ctx,
-        ...vars,
-        ...sessions,
-        body: raw.body,
-        header: hdrMap,
-      };
-
       step.response?.validate?.forEach((validation) =>
         validation.check.forEach((expr) => {
           let rendered: string | undefined = undefined;

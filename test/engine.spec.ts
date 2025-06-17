@@ -27,7 +27,7 @@ const getMinimalPngAsync = async (): Promise<Buffer> => {
   return getMinimalPng();
 };
 
-describe("ZillaScript engine – basic h3 integration", function () {
+describe("ZillaScript engine", function () {
   let server: ReturnType<typeof createServer>;
   let baseUrl = "";
 
@@ -206,11 +206,12 @@ describe("ZillaScript engine – basic h3 integration", function () {
         /* retrieve, expect empty object */
         {
           step: "get-session-two",
+          vars: { addend: 11 },
           request: {
             get: "session",
             session: "session-two",
           },
-          handler: "add_42_to_number 11",
+          handler: "add_42_to_number {{addend}}",
           response: {
             status: 200,
             validate: [
