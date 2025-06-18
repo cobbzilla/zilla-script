@@ -67,6 +67,9 @@ export const exampleScript: ZillaScript = {
             comment: "authenticate with login and password",
             server: "my-server", // could be omitted since my-server is the default
             request: {
+                // Use the HTTP method as the property name and the URI as the value
+                // Supported methods: 
+                post: "auth/login", 
                 method: "POST", // default method is GET, method can be omitted for GET
                 uri: "auth/login", // resulting fetch URL will be http://{{env.PRIMARY_HOST}}:{{env.PRIMARY_PORT}}/mapi/auth/login
                 contentType: "application/json", // could be omitted, application/json is the default

@@ -30,17 +30,30 @@ export type ZillaScriptHeader = {
     name: string;
     value: string;
 };
-export type ZillaRequestMethod = "GET" | "HEAD" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "CONNECT" | "TRACE";
+export declare enum ZillaRequestMethod {
+    Get = "GET",
+    Head = "HEAD",
+    Post = "POST",
+    Put = "PUT",
+    Patch = "PATCH",
+    Delete = "DELETE",
+    Options = "OPTIONS",
+    Connect = "CONNECT",
+    Trace = "TRACE"
+}
 export type ZillaScriptRequest = {
-    uri?: string;
     get?: string;
     head?: string;
     post?: string;
     put?: string;
     patch?: string;
     delete?: string;
-    files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
+    options?: string;
+    connect?: string;
+    trace?: string;
+    uri?: string;
     method?: ZillaRequestMethod;
+    files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
     session?: string;
     headers?: ZillaScriptHeader[];
     contentType?: string;

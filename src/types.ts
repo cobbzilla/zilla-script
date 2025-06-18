@@ -42,27 +42,35 @@ export type ZillaScriptHeader = {
   value: string;
 };
 
-export type ZillaRequestMethod =
-  | "GET"
-  | "HEAD"
-  | "POST"
-  | "PUT"
-  | "PATCH"
-  | "DELETE"
-  | "OPTIONS"
-  | "CONNECT"
-  | "TRACE";
+export enum ZillaRequestMethod {
+  Get = "GET",
+  Head = "HEAD",
+  Post = "POST",
+  Put = "PUT",
+  Patch = "PATCH",
+  Delete = "DELETE",
+  Options = "OPTIONS",
+  Connect = "CONNECT",
+  Trace = "TRACE",
+}
 
 export type ZillaScriptRequest = {
-  uri?: string;
+  // convenience properties, sets both uri + method.
   get?: string;
   head?: string;
   post?: string;
   put?: string;
   patch?: string;
   delete?: string;
-  files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
+  options?: string;
+  connect?: string;
+  trace?: string;
+
+  // these will always be filled out after a step is processed
+  uri?: string;
   method?: ZillaRequestMethod;
+
+  files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
   session?: string; // name of a session to use. the session must have been captured in an earlier step
   headers?: ZillaScriptHeader[];
   contentType?: string; // default is application/json. This shortcut is equivalent to sending {name:"Content-Type", value:"..."} in the headers

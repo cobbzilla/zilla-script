@@ -2,6 +2,7 @@ import Handlebars from "handlebars";
 import { AxiosResponse } from "axios";
 import {
   ZillaRawResponse,
+  ZillaRequestMethod,
   ZillaResponseValidationResult,
   ZillaScript,
   ZillaScriptInit,
@@ -36,32 +37,33 @@ const processStep = (
   step: ZillaScriptStep,
   handlers: Record<string, ZillaScriptResponseHandler>
 ): ZillaScriptProcessedStep => {
-  if (step.request.get) {
-    step.request.uri = step.request.get;
-    step.request.method = "GET";
-  } else if (step.request.head) {
-    step.request.uri = step.request.head;
-    step.request.method = "HEAD";
-  } else if (step.request.post) {
-    step.request.uri = step.request.post;
-    step.request.method = "POST";
-  } else if (step.request.put) {
-    step.request.uri = step.request.put;
-    step.request.method = "PUT";
-  } else if (step.request.patch) {
-    step.request.uri = step.request.patch;
-    step.request.method = "PATCH";
-  } else if (step.request.delete) {
-    step.request.uri = step.request.delete;
-    step.request.method = "DELETE";
-  } else if (isEmpty(step.request.uri)) {
+  // translate method properties (get/post/etc) into uri + method
+  let methodPropFound = false;
+  for (const method of Object.values(ZillaRequestMethod)) {
+    const propName = method.toLowerCase() as keyof typeof step.request;
+    if (propName in step.request) {
+      if (methodPropFound) {
+        throw new Error(
+          `Multiple method properties found in step: ${JSON.stringify(step)}`
+        );
+      }
+      step.request.uri = step.request[propName] as string;
+      step.request.method = method;
+      methodPropFound = true;
+    }
+  }
+
+  if (!methodPropFound && isEmpty(step.request.uri)) {
+    // if we still don't have a URI, that's an error
     throw new Error(
       `ERROR No URI specified for step.request=${JSON.stringify(step.request)}`
     );
-  } else if (isEmpty(step.request.method)) {
-    step.request.method = "GET";
+  } else if (!methodPropFound && isEmpty(step.request.method)) {
+    // if we still don't have a method, assume GET
+    step.request.method = ZillaRequestMethod.Get;
   }
   if (step.handler) {
+    // if the step has a handler, verify that the handler has been defined (in init)
     if (typeof step.handler === "string") {
       step.handler = [step.handler];
     }
@@ -81,8 +83,9 @@ export const runZillaScript = async (
   opts: ZillaScriptOptions = {}
 ): Promise<ZillaScriptResult> => {
   const logger: GenericLogger = opts.logger ?? DEFAULT_LOGGER;
-
   const env = opts.env ?? {};
+
+  // merge init blocks -- runtime init overrides script init
   const init = Object.assign(
     {},
     script.init || {},
@@ -106,21 +109,23 @@ export const runZillaScript = async (
 
   const stepResults: ZillaStepResult[] = [];
 
-  logger.info(`starting script "${script.script}"`);
+  logger.info(`***** [SCRIPT ${script.script}] starting`);
 
   const steps: ZillaScriptProcessedStep[] = script.steps.map((step) =>
     processStep(step, handlers)
   );
+  let stepPrefix = "";
   for (const step of steps) {
+    stepPrefix = `*** [STEP "${step.step ?? "(unnamed)"}"] `;
     if (step.delay) {
-      logger.info(`step "${step.step ?? "(unnamed)"}" delaying ${step.delay}`);
+      logger.info(`${stepPrefix} delaying ${step.delay}`);
       await sleep(
         typeof step.delay === "number"
           ? step.delay
           : parseSimpleTime(step.delay)
       );
     }
-    logger.info(`step "${step.step ?? "(unnamed)"}" begin`);
+    logger.info(`${stepPrefix} begin`);
 
     /* create containers so we can still inspect them if an early error aborts */
     const checkDetails: ZillaResponseValidationResult["details"] = [];
@@ -131,7 +136,7 @@ export const runZillaScript = async (
       const srv = servers.find((s) => s.name === (step.server ?? defServer));
       if (!srv) {
         const msg = `server not found for step ${step.step ?? "?"}`;
-        logger.error(msg);
+        logger.error(`${stepPrefix}: ${msg}`);
         throw new Error(msg);
       }
 
@@ -205,7 +210,7 @@ export const runZillaScript = async (
           ? JSON.stringify(walk(step.request.body, ctx))
           : undefined;
 
-      logger.info(`→ ${method} ${url}`, {
+      logger.info(`${stepPrefix} → ${method} ${url}`, {
         headers: [...headers.entries()],
         body: body ? JSON.parse(body) : undefined,
       });
@@ -219,7 +224,7 @@ export const runZillaScript = async (
         ? parseAxiosResponse(res as AxiosResponse)
         : parseResponse(res as Response));
 
-      logger.info(`← ${res.status} ${method} ${url}`, raw);
+      logger.info(`${stepPrefix} ← ${res.status} ${method} ${url}`, raw);
 
       /* ---------- capture session ---------------------------------- */
       if (step.response?.session) {
@@ -238,10 +243,13 @@ export const runZillaScript = async (
         const tok = extract("session", strategy, raw.body, raw.headers, {});
         if (typeof tok === "string") {
           sessions[step.response.session.name] = tok;
-          logger.info(`captured session "${step.response.session.name}"`, tok);
+          logger.trace(
+            `${stepPrefix} captured session "${step.response.session.name}"`,
+            tok
+          );
         } else {
           logger.warn(
-            `session capture for "${step.response.session.name}" returned non-string token`,
+            `${stepPrefix} session capture for "${step.response.session.name}" returned non-string token`,
             tok
           );
         }
@@ -252,7 +260,7 @@ export const runZillaScript = async (
         for (const [v, src] of Object.entries(step.response.vars)) {
           const val = extract(v, src, raw.body, raw.headers, vars);
           vars[v] = val;
-          logger.debug(`captured var ${v}`, val);
+          logger.trace(`${stepPrefix} captured var ${v}`, val);
         }
       }
 
@@ -275,7 +283,7 @@ export const runZillaScript = async (
           const handlerParts = h.split(" ");
           const handler = handlers[handlerParts[0]];
           if (!handler) {
-            logger.error(`handler not found: ${h}`);
+            logger.error(`${stepPrefix} handler not found: ${h}`);
           }
           const args = handlerParts.length > 1 ? handlerParts.slice(1) : [];
           const varsForHandler = { ...vars, ...sessions };
@@ -322,8 +330,8 @@ export const runZillaScript = async (
             })(cx);
             const pass = rendered.trim().toLowerCase() === "true";
             if (!pass) {
-              logger.debug(
-                `FAILED step=${step.step} expr=${expr} cx=${JSON.stringify(cx)}`
+              logger.warn(
+                `${stepPrefix} FAILED expr=${expr} cx=${JSON.stringify(cx)}`
               );
             }
             overall &&= pass;
@@ -333,7 +341,7 @@ export const runZillaScript = async (
               check: expr,
               result: pass,
             });
-            logger.debug(`validation "${expr}" → ${pass}`);
+            logger.trace(`${stepPrefix} validation "${expr}" → ${pass}`);
           } catch (err) {
             overall = false;
             checkDetails.push({
@@ -343,7 +351,7 @@ export const runZillaScript = async (
               error: (err as Error).message,
               result: false,
             });
-            logger.error(`validation "${expr}" threw`, err);
+            logger.trace(`${stepPrefix} validation "${expr}" threw`, err);
           }
         })
       );
@@ -372,11 +380,12 @@ export const runZillaScript = async (
         sessions: { ...sessions },
       });
 
-      logger.info(`step "${step.step ?? "(unnamed)"}" complete`);
+      logger.info(`${stepPrefix} complete`);
     } catch (err) {
-      logger.error(`error in step "${step.step ?? "(unnamed)"}"`, err);
-
-      if (!opts.continueOnError) throw err as Error;
+      logger.info(`${stepPrefix} ERROR`);
+      if (!opts.continueOnError) {
+        throw err as Error;
+      }
 
       /* capture whatever we have so far + runtime error detail */
       checkDetails.push({
@@ -398,9 +407,11 @@ export const runZillaScript = async (
         vars: { ...vars },
         sessions: { ...sessions },
       });
+    } finally {
+      logger.info(`${stepPrefix} finished`);
     }
   }
 
-  logger.info(`script "${script.script}" finished`);
+  logger.info(`***** [SCRIPT ${script.script}] finished`);
   return { script, stepResults };
 };
