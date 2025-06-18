@@ -359,7 +359,6 @@ export const runZillaScript = async (
           step.step ?? "?"
         }: ${JSON.stringify(checkDetails, null, 2)}\n
         cx=${JSON.stringify(cx, null, 2)}`;
-        logger.error(msg);
         if (!opts.continueOnInvalid) throw new Error(msg);
       }
 
