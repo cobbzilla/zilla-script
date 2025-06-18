@@ -23,7 +23,7 @@ export type ZillaScriptResponseHandler = (response: ZillaRawResponse, args: stri
 export type ZillaScriptInit = {
     servers?: ZillaScriptServer[];
     sessions?: Record<string, string>;
-    vars?: Record<string, string | null>;
+    vars?: ZillaScriptVars;
     handlers?: Record<string, ZillaScriptResponseHandler>;
 };
 export type ZillaScriptHeader = {

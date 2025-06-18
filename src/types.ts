@@ -33,7 +33,7 @@ export type ZillaScriptResponseHandler = (
 export type ZillaScriptInit = {
   servers?: ZillaScriptServer[];
   sessions?: Record<string, string>; // existing sessions, name->token
-  vars?: Record<string, string | null>; // predefined vars
+  vars?: ZillaScriptVars; // predefined vars
   handlers?: Record<string, ZillaScriptResponseHandler>;
 };
 
