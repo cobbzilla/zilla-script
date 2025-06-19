@@ -125,6 +125,7 @@ export type ZillaScriptResponse = {
 export type ZillaScriptLoop = {
   items: unknown[] | string;
   varName: string;
+  indexVarName?: string;
   start?: number;
   steps?: ZillaScriptStep[];
   include?: string;

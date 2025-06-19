@@ -81,10 +81,15 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         if (!Array.isArray(items)) {
           throw new Error(`step=${stepName} loop.items is not an array`);
         }
-        for (const item of items.slice(step.loop.start || 0)) {
+        for (let i = step.loop.start ?? 0; i < items.length; ++i) {
+          const item = items[i];
+          const loopVars = { ...vars, [step.loop.varName]: item };
+          if (step.loop.indexVarName) {
+            loopVars[step.loop.indexVarName] = i;
+          }
           const subScriptOpts: ZillaScriptStepOptions = {
             ...opts,
-            vars: { ...vars, [step.loop.varName]: item },
+            vars: loopVars,
             steps: subScriptSteps,
           };
           const results = await runScriptSteps(subScriptOpts);
