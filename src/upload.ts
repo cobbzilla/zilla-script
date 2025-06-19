@@ -44,9 +44,9 @@ export const upload = async (
   step: ZillaScriptStep,
   headers: Headers
 ): Promise<AxiosResponse> => {
-  const formData = await formDataForFiles(step.request.files!);
+  const formData = await formDataForFiles(step.request!.files!);
   return await axios.post(url, formData, {
-    method: step.request.method || "POST",
+    method: step.request?.method || "POST",
     headers: toAxiosHeaders(headers, formData.getHeaders(), [
       "Content-Type",
       "Content-Length",

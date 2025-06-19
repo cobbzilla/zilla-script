@@ -90,6 +90,12 @@ export type ZillaScriptResponse = {
     vars?: ZillaCaptureVars;
     validate?: ZillaResponseValidation[];
 };
+export type ZillaScriptLoop = {
+    items: unknown[] | string;
+    start?: number;
+    steps?: ZillaScriptStep[];
+    include?: string;
+};
 export type ZillaScriptStep = {
     step?: string;
     delay?: number | string;
@@ -97,7 +103,8 @@ export type ZillaScriptStep = {
     server?: string;
     vars?: ZillaScriptVars;
     edits?: Record<string, unknown>;
-    request: ZillaScriptRequest;
+    loop?: ZillaScriptLoop;
+    request?: ZillaScriptRequest;
     response?: ZillaScriptResponse;
     handler?: string | string[];
 };
