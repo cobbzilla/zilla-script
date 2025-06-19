@@ -33,7 +33,10 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
   let stepPrefix = "";
   const stepResults: ZillaStepResult[] = [];
   for (const step of steps) {
-    stepPrefix = `*** [STEP "${step.step ?? "(unnamed)"}"] `;
+    const stepName = step.step
+      ? evalTpl(step.step, { ...vars, env })
+      : "(unnamed)";
+    stepPrefix = `*** [STEP "${stepName}"] `;
     if (step.delay) {
       logger.info(`${stepPrefix} delaying ${step.delay}`);
       await sleep(
@@ -76,7 +79,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           ? step.loop.items
           : (vars[step.loop.items] as unknown[]);
         if (!Array.isArray(items)) {
-          throw new Error(`step=${step.step} loop.items is not an array`);
+          throw new Error(`step=${stepName} loop.items is not an array`);
         }
         for (const item of items.slice(step.loop.start || 0)) {
           const subScriptOpts: ZillaScriptStepOptions = {
@@ -85,7 +88,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
             steps: subScriptSteps,
           };
           const results = await runScriptSteps(subScriptOpts);
-          stepResults.push(...results.map((r) => ({ ...r, step: step.step })));
+          stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
         }
         continue; // next step, everything after this handles a single request
       }
@@ -239,9 +242,11 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       };
 
       if (!overall) {
-        const msg = `validation failed in step ${
-          step.step ?? "?"
-        }: ${JSON.stringify(checkDetails, null, 2)}\n
+        const msg = `validation failed in step ${stepName}: ${JSON.stringify(
+          checkDetails,
+          null,
+          2
+        )}\n
         cx=${JSON.stringify(cx, null, 2)}`;
         if (!scriptOpts.continueOnInvalid) throw new Error(msg);
       }
