@@ -124,6 +124,7 @@ export type ZillaScriptResponse = {
 
 export type ZillaScriptLoop = {
   items: unknown[] | string;
+  varName: string;
   start?: number;
   steps?: ZillaScriptStep[];
   include?: string;
@@ -169,6 +170,7 @@ export type ZillaResponseValidationResult = {
 };
 
 export type ZillaStepResult = {
+  step?: string; // if this was done in a loop, this is the name of the loop step
   status: number;
   headers: ZillaScriptHeader[];
   body: object | string | number | boolean;

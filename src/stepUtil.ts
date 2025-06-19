@@ -3,6 +3,7 @@ import { GenericLogger, isEmpty } from "zilla-util";
 import {
   ZillaRawResponse,
   ZillaRequestMethod,
+  ZillaScriptLoop,
   ZillaScriptOptions,
   ZillaScriptRequest,
   ZillaScriptResponseHandler,
@@ -14,6 +15,7 @@ import {
 import { upload } from "./upload.js";
 import { parseAxiosResponse, parseResponse } from "./util.js";
 import { extract } from "./extract.js";
+import { readFileSync } from "fs";
 
 export type ZillaScriptProcessedRequest = ZillaScriptRequest & {
   uri: string;
@@ -228,4 +230,20 @@ export const assignResponseSession = (
       tok
     );
   }
+};
+
+export const loadSubScriptSteps = async (
+  loop: ZillaScriptLoop
+): Promise<ZillaScriptStep[]> => {
+  if (loop.steps) return loop.steps;
+  if (loop.include) {
+    const json = JSON.parse(readFileSync(loop.include, "utf8"));
+    if (json.script && json.steps) {
+      return json.steps;
+    }
+    throw new Error(
+      `loadSubScriptSteps: include=${loop.include} expected 'steps' property in JSON`
+    );
+  }
+  throw new Error(`loadSubScriptSteps: neither steps nor include specified`);
 };

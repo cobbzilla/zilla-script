@@ -303,8 +303,58 @@ describe("ZillaScript engine", function () {
     const step0 = result.stepResults[0];
     expect(step0.status).to.equal(200);
     expect(step0.validation.result).to.be.true;
-    const step1 = result.stepResults[0];
+    const step1 = result.stepResults[1];
     expect(step1.status).to.equal(200);
     expect(step1.validation.result).to.be.true;
+  });
+
+  it("runs several requests in a loop", async () => {
+    const script: ZillaScript = {
+      script: "loop-requests",
+      init: {
+        servers: [
+          {
+            server: "local",
+            base: baseUrl,
+          },
+        ],
+      },
+      steps: [
+        {
+          step: "loop-step",
+          loop: {
+            items: ["one", "two", "three"],
+            varName: "itemIndex",
+            steps: [
+              {
+                request: {
+                  post: "test",
+                  body: { foo: "bar-{{itemIndex}}" },
+                },
+                response: {
+                  validate: [
+                    {
+                      id: "index-check",
+                      check: ["endsWith body.echoed.foo itemIndex"],
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = await runZillaScript(script);
+    expect(result.stepResults).to.have.lengthOf(3);
+    const step0 = result.stepResults[0];
+    expect(step0.status).to.equal(200);
+    expect(step0.validation.result).to.be.true;
+    expect((step0.body as any).echoed.foo).to.be.eq("bar-one");
+    const step1 = result.stepResults[1];
+    expect(step1.status).to.equal(200);
+    expect(step1.validation.result).to.be.true;
+    expect((step1.body as any).echoed.foo).to.be.eq("bar-two");
   });
 });

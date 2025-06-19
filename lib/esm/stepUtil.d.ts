@@ -1,5 +1,5 @@
 import { GenericLogger } from "zilla-util";
-import { ZillaRawResponse, ZillaRequestMethod, ZillaScriptOptions, ZillaScriptRequest, ZillaScriptResponseHandler, ZillaScriptSendSession, ZillaScriptServer, ZillaScriptStep, ZillaScriptVars } from "./types.js";
+import { ZillaRawResponse, ZillaRequestMethod, ZillaScriptLoop, ZillaScriptOptions, ZillaScriptRequest, ZillaScriptResponseHandler, ZillaScriptSendSession, ZillaScriptServer, ZillaScriptStep, ZillaScriptVars } from "./types.js";
 export type ZillaScriptProcessedRequest = ZillaScriptRequest & {
     uri: string;
 };
@@ -53,3 +53,4 @@ export declare const makeRequest: (step: ZillaScriptStep & {
 export declare const assignResponseSession: (srv: ZillaScriptServer, step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
 }, res: ZillaRawResponse, sessions: Record<string, string>, logger: GenericLogger, stepPrefix: string) => void;
+export declare const loadSubScriptSteps: (loop: ZillaScriptLoop) => Promise<ZillaScriptStep[]>;

@@ -92,6 +92,7 @@ export type ZillaScriptResponse = {
 };
 export type ZillaScriptLoop = {
     items: unknown[] | string;
+    varName: string;
     start?: number;
     steps?: ZillaScriptStep[];
     include?: string;
@@ -132,6 +133,7 @@ export type ZillaResponseValidationResult = {
     }[];
 };
 export type ZillaStepResult = {
+    step?: string;
     status: number;
     headers: ZillaScriptHeader[];
     body: object | string | number | boolean;

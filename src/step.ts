@@ -7,6 +7,7 @@ import { extract } from "./extract.js";
 import {
   assignResponseSession,
   editVars,
+  loadSubScriptSteps,
   makeRequest,
   processStep,
   resolveServer,
@@ -69,6 +70,26 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       if (step.edits) {
         editVars(step, vars);
       }
+      if (step.loop) {
+        const subScriptSteps = await loadSubScriptSteps(step.loop);
+        const items = Array.isArray(step.loop.items)
+          ? step.loop.items
+          : (vars[step.loop.items] as unknown[]);
+        if (!Array.isArray(items)) {
+          throw new Error(`step=${step.step} loop.items is not an array`);
+        }
+        for (const item of items.slice(step.loop.start || 0)) {
+          const subScriptOpts: ZillaScriptStepOptions = {
+            ...opts,
+            vars: { ...vars, [step.loop.varName]: item },
+            steps: subScriptSteps,
+          };
+          const results = await runScriptSteps(subScriptOpts);
+          stepResults.push(...results.map((r) => ({ ...r, step: step.step })));
+        }
+        continue; // next step, everything after this handles a single request
+      }
+
       const rawUrl =
         (srv.base.endsWith("/") ? srv.base : srv.base + "/") +
         (step.request.uri.startsWith("/")
