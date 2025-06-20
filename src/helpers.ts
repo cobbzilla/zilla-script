@@ -68,7 +68,8 @@ const operatorHelpers: Array<[string, string]> = [
   ["notEndsWith", "notEndsWith"],
   ["includes", "includes"],
   ["notIncludes", "notIncludes"],
-  ["empty", "notEmpty"],
+  ["empty", "empty"],
+  ["notEmpty", "notEmpty"],
 ];
 
 operatorHelpers.forEach(([name, op]: [string, string]): void =>

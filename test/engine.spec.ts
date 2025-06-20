@@ -76,6 +76,7 @@ describe("ZillaScript engine", function () {
                 check: [
                   "eq body.ok true",
                   "compare body.echoed.foo '==' 'bar'",
+                  "notEmpty body.echoed.foo",
                 ],
               },
             ],
