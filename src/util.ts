@@ -2,7 +2,8 @@ import { AxiosResponse, AxiosRequestHeaders, AxiosHeaders } from "axios";
 import { ZillaRawResponse, ZillaRawResponseHeaderArray } from "./types.js";
 import FormData from "form-data";
 
-export const headerName = (h: string): string => h.replace(/[^a-z0-9]/gi, "");
+export const headerName = (h: string): string =>
+  h.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 
 export const firstHeader = (
   headers: ZillaRawResponseHeaderArray,

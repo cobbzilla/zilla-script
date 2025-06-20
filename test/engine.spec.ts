@@ -131,6 +131,12 @@ describe("ZillaScript engine", function () {
               name: "session-one",
               from: { cookie: { name: "sess" } }, // redundant, but why not test it
             },
+            validate: [
+              {
+                id: "verify header cookie",
+                check: ["includes header.set_cookie 'sess'"],
+              },
+            ],
           },
         },
         /* add three items */
