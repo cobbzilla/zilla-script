@@ -7,6 +7,7 @@ import { extract } from "./extract.js";
 import {
   assignResponseSession,
   editVars,
+  loadIncludeFile,
   loadSubScriptSteps,
   makeRequest,
   processStep,
@@ -73,6 +74,43 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       if (step.edits) {
         editVars(step, vars);
       }
+
+      if (step.include) {
+        const include =
+          typeof step.include === "string"
+            ? await loadIncludeFile(step.include)
+            : step.include;
+        if (include.params) {
+          for (const [name, cfg] of Object.entries(include.params)) {
+            if (
+              cfg.required &&
+              (!step.params || typeof step.params[name] === "undefined")
+            ) {
+              throw new Error(
+                `step=${stepName} param=${name} is required by included script`
+              );
+            } else if (
+              cfg.defaultValue &&
+              (!step.params || typeof step.params[name] === "undefined")
+            ) {
+              vars[name] = cfg.defaultValue;
+            } else if (
+              step.params &&
+              typeof step.params[name] !== "undefined"
+            ) {
+              vars[name] = step.params[name];
+            }
+          }
+        }
+        const includeScriptOpts: ZillaScriptStepOptions = {
+          ...opts,
+          steps: include.steps,
+        };
+        const results = await runScriptSteps(includeScriptOpts);
+        stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
+        continue; // next step, everything after this handles a single request
+      }
+
       if (step.loop) {
         const subScriptSteps = await loadSubScriptSteps(step.loop);
         const items = Array.isArray(step.loop.items)

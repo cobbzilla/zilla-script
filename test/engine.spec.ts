@@ -1,10 +1,11 @@
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import { createServer } from "node:http";
 import { AddressInfo } from "node:net";
 import {
   runZillaScript,
   ZillaRawResponse,
   ZillaScript,
+  ZillaScriptInit,
   ZillaScriptOptions,
   ZillaScriptResult,
   ZillaScriptVars,
@@ -27,6 +28,8 @@ const getMinimalPngAsync = async (): Promise<Buffer> => {
   return getMinimalPng();
 };
 
+let init: ZillaScriptInit;
+
 describe("ZillaScript engine", function () {
   let server: ReturnType<typeof createServer>;
   let baseUrl = "";
@@ -40,6 +43,14 @@ describe("ZillaScript engine", function () {
     await new Promise<void>((resolve) => server.listen(0, resolve));
     const { port } = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${port}/`;
+    init = {
+      servers: [
+        {
+          server: "local",
+          base: baseUrl,
+        },
+      ],
+    };
   });
 
   after(async () => {
@@ -51,16 +62,7 @@ describe("ZillaScript engine", function () {
   it("handles a simple POST and passes validation", async () => {
     const script: ZillaScript = {
       script: "post-echo",
-      init: {
-        servers: [
-          {
-            server: "local",
-            base: baseUrl,
-            session: { cookie: "sess" },
-          },
-        ],
-        vars: {},
-      },
+      init,
       steps: [
         {
           step: "post-step",
@@ -249,14 +251,7 @@ describe("ZillaScript engine", function () {
   it("uploads some files", async () => {
     const script: ZillaScript = {
       script: "upload-files",
-      init: {
-        servers: [
-          {
-            server: "local",
-            base: baseUrl,
-          },
-        ],
-      },
+      init,
       steps: [
         {
           step: "upload-step",
@@ -312,14 +307,7 @@ describe("ZillaScript engine", function () {
   it("runs several requests in a loop", async () => {
     const script: ZillaScript = {
       script: "loop-requests",
-      init: {
-        servers: [
-          {
-            server: "local",
-            base: baseUrl,
-          },
-        ],
-      },
+      init,
       steps: [
         {
           step: "loop-step",
@@ -357,5 +345,73 @@ describe("ZillaScript engine", function () {
     expect(step1.status).to.equal(200);
     expect(step1.validation.result).to.be.true;
     expect((step1.body as any).echoed.foo).to.be.eq("bar-two");
+  });
+
+  const include: ZillaScript = {
+    script: "script-to-include",
+    params: {
+      dummyParam: { required: true },
+    },
+    steps: [
+      {
+        request: {
+          post: "test",
+          body: { foo: "{{dummyParam}}" },
+        },
+        response: {
+          validate: [
+            {
+              id: "index-check",
+              check: ["endsWith body.echoed.foo dummyParam"],
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  it("fails when including another script without a required parameter", async () => {
+    const script: ZillaScript = {
+      script: "includes other script",
+      init,
+      steps: [
+        {
+          step: "include-step",
+          include,
+        },
+      ],
+    };
+
+    try {
+      await runZillaScript(script);
+      assert.fail(
+        "expected script to fail when required param was not provided"
+      );
+    } catch (error) {
+      expect((error as Error).message).to.include("dummyParam");
+    }
+  });
+
+  it("includes another script with a required parameter", async () => {
+    const script: ZillaScript = {
+      script: "includes other script",
+      init,
+      steps: [
+        {
+          step: "include-step",
+          include,
+          params: {
+            dummyParam: "foobar",
+          },
+        },
+      ],
+    };
+
+    const result = await runZillaScript(script);
+    expect(result.stepResults).to.have.lengthOf(1);
+    const step0 = result.stepResults[0];
+    expect(step0.status).to.equal(200);
+    expect(step0.validation.result).to.be.true;
+    expect((step0.body as any).echoed.foo).to.be.eq("foobar");
   });
 });

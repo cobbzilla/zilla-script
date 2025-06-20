@@ -100,6 +100,8 @@ export type ZillaScriptLoop = {
 };
 export type ZillaScriptStep = {
     step?: string;
+    include?: string | ZillaScript;
+    params?: ZillaScriptVars;
     delay?: number | string;
     comment?: string;
     server?: string;
@@ -110,8 +112,18 @@ export type ZillaScriptStep = {
     response?: ZillaScriptResponse;
     handler?: string | string[];
 };
+export type ZillaScriptParam = {
+    required?: boolean;
+    defaultValue?: unknown;
+};
+export type ZillaScriptParams = Record<string, ZillaScriptParam>;
 export type ZillaScript = {
     script: string;
+    params?: ZillaScriptParams;
+    sets?: {
+        vars?: string[];
+        sessions?: string[];
+    };
     init?: ZillaScriptInit;
     steps: ZillaScriptStep[];
 };

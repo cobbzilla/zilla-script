@@ -3,6 +3,7 @@ import { GenericLogger, isEmpty } from "zilla-util";
 import {
   ZillaRawResponse,
   ZillaRequestMethod,
+  ZillaScript,
   ZillaScriptLoop,
   ZillaScriptOptions,
   ZillaScriptRequest,
@@ -58,6 +59,9 @@ export const processStep = (
     if (!step.loop.items) {
       throw new Error(`ERROR No items property for loop in step=${step.step}`);
     }
+    return step as ZillaScriptProcessedStep;
+  }
+  if (step.include) {
     return step as ZillaScriptProcessedStep;
   }
   if (!step.request) {
@@ -232,12 +236,16 @@ export const assignResponseSession = (
   }
 };
 
+export const loadIncludeFile = async (path: string): Promise<ZillaScript> => {
+  return JSON.parse(readFileSync(path, "utf8")) as ZillaScript;
+};
+
 export const loadSubScriptSteps = async (
   loop: ZillaScriptLoop
 ): Promise<ZillaScriptStep[]> => {
   if (loop.steps) return loop.steps;
   if (loop.include) {
-    const json = JSON.parse(readFileSync(loop.include, "utf8"));
+    const json = await loadIncludeFile(loop.include);
     if (json.script && json.steps) {
       return json.steps;
     }

@@ -133,6 +133,8 @@ export type ZillaScriptLoop = {
 
 export type ZillaScriptStep = {
   step?: string;
+  include?: string | ZillaScript;
+  params?: ZillaScriptVars;
   delay?: number | string;
   comment?: string;
   server?: string;
@@ -144,8 +146,17 @@ export type ZillaScriptStep = {
   handler?: string | string[]; // name of handler to call before validation
 };
 
+export type ZillaScriptParam = { required?: boolean; defaultValue?: unknown };
+
+export type ZillaScriptParams = Record<string, ZillaScriptParam>;
+
 export type ZillaScript = {
   script: string;
+  params?: ZillaScriptParams;
+  sets?: {
+    vars?: string[];
+    sessions?: string[];
+  };
   init?: ZillaScriptInit;
   steps: ZillaScriptStep[];
 };
@@ -171,7 +182,7 @@ export type ZillaResponseValidationResult = {
 };
 
 export type ZillaStepResult = {
-  step?: string; // if this was done in a loop, this is the name of the loop step
+  step?: string; // if this was done in a loop or include, this is the name of the loop/include step
   status: number;
   headers: ZillaScriptHeader[];
   body: object | string | number | boolean;
