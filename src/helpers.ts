@@ -7,8 +7,11 @@ const isComparable = (v: unknown): v is string | number =>
 Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   /* plain equality always works (covers booleans too) */
   if (op === "empty") return isEmpty(l);
+  if (op === "notEmpty") return !isEmpty(l);
   if (op === "undefined") return typeof l === "undefined";
+  if (op === "notUndefined") return typeof l !== "undefined";
   if (op === "null") return l == null;
+  if (op === "notNull") return l != null;
   if (op === "==" || op === "!=") return op === "==" ? l == r : l != r;
 
   /* the rest require strictly comparable operands */
@@ -65,6 +68,7 @@ const operatorHelpers: Array<[string, string]> = [
   ["notEndsWith", "notEndsWith"],
   ["includes", "includes"],
   ["notIncludes", "notIncludes"],
+  ["empty", "notEmpty"],
 ];
 
 operatorHelpers.forEach(([name, op]: [string, string]): void =>

@@ -9,7 +9,32 @@ Tests are simply objects with values. They can be declared using TypeScript, Jav
 Requests can capture variables, use any open session, or capture a new session.
 
 # Validations
-Responses can be validated for a variety of conditions
+Responses can be validated for a variety of conditions. Validation are an array of `{id: string, check: string[]}`.
+
+The `id` is a descriptive name of the check. Each string in the `check` array is a check expression, described below.
+
+## Checks
+A `check` expression starts with a check type. Available check types are:
+
+| Check Type    | # of Args | Arg Types         | Description                            | Example                        |
+|---------------|-----------|-------------------|----------------------------------------|--------------------------------|
+| empty         | 1         | any               | null, undefined, empty string or array | empty someVar                  |
+| notEmpty      | 1         | any               | not empty                              | notEmpty someVar               |
+| undefined     | 1         | any               | undefined                              | undefined someVar              |
+| notUndefined  | 1         | any               | not undefined                          | notUndefined someVar           |
+| null          | 1         | any               | null                                   | null someVar                   |
+| notNull       | 1         | any               | not null                               | notNull someVar                |
+| eq            | 2         | any               | equality                               | eq someVar 'value'             |
+| neq           | 2         | any               | inequality                             | neq someVar 'value'            |
+| gt            | 2         | numeric or string | greater than                           | gt someVar 'value'             |
+| gte           | 2         | numeric or string | greater than or equal                  | gte someVar 'value'            |
+| lt            | 2         | numeric or string | less than                              | lt someVar 'value'             |
+| lte           | 2         | numeric or string | less than or equal                     | lte someVar 'value'            |
+| startsWith    | 2         | string            | string starts with                     | startsWith someVar 'prefix'    |
+| notStartsWith | 2         | string            | negation of string starts with         | notStartsWith someVar 'prefix' |
+| endsWith      | 2         | string            | string ends with                       | endsWith someVar 'suffix'      |
+| notEndsWith   | 2         | string            | negation of string ends with           | notEndsWith someVar 'prefix'   |
+| includes      | 2         | string            | inclusion                              | includes someVar 'someValue'   |
 
 # Example
 
@@ -132,7 +157,11 @@ export const exampleScript: ZillaScript = {
                 validate: [
                     {
                         id: "captured-correct-locale",
-                        check: ["compare locale '==' 'es'"],
+                        check: [
+                            // these are equivalent
+                            "eq locale 'es'",
+                            "compare locale '==' 'es'",
+                        ],
                     },
                 ],
             },
