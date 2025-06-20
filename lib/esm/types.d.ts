@@ -90,7 +90,7 @@ export type ZillaScriptResponse = {
     status?: number;
     statusClass?: ZillaStatusClass;
     session?: ZillaCaptureSession;
-    vars?: ZillaCaptureVars;
+    capture?: ZillaCaptureVars;
     validate?: ZillaResponseValidation[];
 };
 export type ZillaScriptLoop = {

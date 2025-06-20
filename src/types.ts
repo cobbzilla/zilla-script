@@ -121,7 +121,7 @@ export type ZillaScriptResponse = {
   status?: number; // default is 200
   statusClass?: ZillaStatusClass; // default is 2xx
   session?: ZillaCaptureSession;
-  vars?: ZillaCaptureVars;
+  capture?: ZillaCaptureVars;
   validate?: ZillaResponseValidation[];
 };
 

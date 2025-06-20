@@ -69,7 +69,19 @@ describe("ZillaScript engine", function () {
           },
           response: {
             status: 200,
+            capture: {
+              bar: { body: "echoed.foo" },
+              type: { header: { name: "Content-Type" } },
+            },
             validate: [
+              {
+                id: "captured value of body.echoed.foo as variable named bar",
+                check: ["eq bar 'bar'"],
+              },
+              {
+                id: "captured content-type header into variable named type",
+                check: ["eq type 'application/json'"],
+              },
               {
                 id: "bodyCheck",
                 check: [

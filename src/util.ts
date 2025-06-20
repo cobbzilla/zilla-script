@@ -8,7 +8,8 @@ export const headerName = (h: string): string =>
 export const firstHeader = (
   headers: ZillaRawResponseHeaderArray,
   name: string
-) => headers.find((h) => h.name === name)?.value ?? null;
+) =>
+  headers.find((h) => headerName(h.name) === headerName(name))?.value ?? null;
 
 export const toHeaderArray = (h: Headers): ZillaRawResponseHeaderArray =>
   [...h.entries()].map(([name, value]) => ({ name, value }));
