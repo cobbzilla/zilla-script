@@ -1,5 +1,6 @@
 import { GenericLogger } from "zilla-util";
 import { ZillaRawResponse, ZillaRequestMethod, ZillaScript, ZillaScriptLoop, ZillaScriptOptions, ZillaScriptRequest, ZillaScriptResponseHandler, ZillaScriptSendSession, ZillaScriptServer, ZillaScriptStep, ZillaScriptVars } from "./types.js";
+import { Ctx } from "./helpers.js";
 export type ZillaScriptProcessedRequest = ZillaScriptRequest & {
     uri: string;
 };
@@ -47,9 +48,12 @@ export declare const setRequestSession: (srv: {
 }, sessions: Record<string, string>, step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
 }, headers: Headers) => void;
+export declare const getBody: (step: ZillaScriptStep & {
+    request: ZillaScriptProcessedRequest;
+}, ctx: Ctx, vars: ZillaScriptVars) => string | undefined;
 export declare const makeRequest: (step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
-}, url: string, headers: Headers, method: ZillaRequestMethod | string, body?: string) => Promise<ZillaRawResponse>;
+}, url: string, headers: Headers, method: ZillaRequestMethod | string, body?: unknown) => Promise<ZillaRawResponse>;
 export declare const assignResponseSession: (srv: ZillaScriptServer, step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
 }, res: ZillaRawResponse, sessions: Record<string, string>, logger: GenericLogger, stepPrefix: string) => void;

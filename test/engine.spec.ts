@@ -18,6 +18,15 @@ import {
 
 let init: ZillaScriptInit;
 
+const verifySingleStepOk = async (script: ZillaScript) => {
+  const result = await runZillaScript(script);
+  expect(result.stepResults).to.have.lengthOf(1);
+  const step = result.stepResults[0];
+  expect(step.status).to.equal(200);
+  expect(step.validation.result).to.be.true;
+  return step;
+};
+
 describe("ZillaScript engine", function () {
   let server: ReturnType<typeof createServer>;
   let baseUrl = "";
@@ -74,15 +83,7 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-
-    const result = await runZillaScript(script, {
-      continueOnError: false,
-    } as ZillaScriptOptions);
-
-    expect(result.stepResults).to.have.lengthOf(1);
-    const step = result.stepResults[0];
-    expect(step.status).to.equal(200);
-    expect(step.validation.result).to.be.true;
+    const step = await verifySingleStepOk(script);
     expect(step.body).to.deep.equal({ ok: true, echoed: { foo: "bar" } });
   });
 
@@ -400,13 +401,8 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-
-    const result = await runZillaScript(script);
-    expect(result.stepResults).to.have.lengthOf(1);
-    const step0 = result.stepResults[0];
-    expect(step0.status).to.equal(200);
-    expect(step0.validation.result).to.be.true;
-    expect((step0.body as any).echoed.foo).to.be.eq("foobar");
+    const step = await verifySingleStepOk(script);
+    expect((step.body as any).echoed.foo).to.be.eq("foobar");
   });
 
   it("downloads a binary file", async () => {
@@ -432,10 +428,36 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    const result = await runZillaScript(script);
-    expect(result.stepResults).to.have.lengthOf(1);
-    const step0 = result.stepResults[0];
-    expect(step0.status).to.equal(200);
-    expect(step0.validation.result).to.be.true;
+    await verifySingleStepOk(script);
+  });
+
+  it("sends a variable as a request body", async () => {
+    const script: ZillaScript = {
+      script: "variable body",
+      init: { ...init, vars: { foo: { bar: ["baz", "quux"], snarf: 42 } } },
+      steps: [
+        {
+          step: "sends variable foo as a JSON object",
+          request: {
+            post: "test",
+            bodyVar: "foo",
+          },
+          response: {
+            validate: [
+              {
+                id: "got foo object back",
+                check: [
+                  "eq body.echoed.bar.[0] 'baz'",
+                  "eq body.echoed.bar.[1] 'quux'",
+                  "length body.echoed.bar '==' 2",
+                  "eq body.echoed.snarf 42",
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+    await verifySingleStepOk(script);
   });
 });

@@ -60,6 +60,7 @@ export type ZillaScriptRequest = {
     headers?: ZillaScriptHeader[];
     contentType?: string;
     body?: object | string | number | boolean;
+    bodyVar?: string;
 };
 export type ZillaStatusClass = "1xx" | "2xx" | "3xx" | "4xx" | "5xx";
 export type ZillaCaptureSource = {

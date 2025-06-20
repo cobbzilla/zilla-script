@@ -36,8 +36,12 @@ export const createServerHarness = async (
   router.post(
     "/test",
     eventHandler(async (event) => {
-      const body = await readBody<{ foo: string }>(event);
-      return { ok: true, echoed: body };
+      try {
+        const body = await readBody(event);
+        return { ok: true, echoed: body };
+      } catch (err) {
+        console.error(err);
+      }
     })
   );
 

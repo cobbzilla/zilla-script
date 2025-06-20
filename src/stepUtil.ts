@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { AxiosResponse } from "axios";
 import { GenericLogger, isEmpty } from "zilla-util";
 import {
@@ -16,7 +17,7 @@ import {
 import { upload } from "./upload.js";
 import { parseAxiosResponse, parseResponse } from "./util.js";
 import { extract } from "./extract.js";
-import { readFileSync } from "fs";
+import { Ctx, walk } from "./helpers.js";
 
 export type ZillaScriptProcessedRequest = ZillaScriptRequest & {
   uri: string;
@@ -180,6 +181,25 @@ export const setRequestSession = (
   }
 };
 
+export const getBody = (
+  step: ZillaScriptStep & {
+    request: ZillaScriptProcessedRequest;
+  },
+  ctx: Ctx,
+  vars: ZillaScriptVars
+) => {
+  if (step.request.body) {
+    return JSON.stringify(walk(step.request.body, ctx));
+  } else if (step.request.bodyVar) {
+    if (typeof vars[step.request.bodyVar] !== "undefined") {
+      return JSON.stringify(vars[step.request.bodyVar]);
+    } else {
+      throw new Error(`getBody: bodyVar not defined: ${step.request.bodyVar}`);
+    }
+  }
+  return undefined;
+};
+
 export const makeRequest = async (
   step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
@@ -187,12 +207,12 @@ export const makeRequest = async (
   url: string,
   headers: Headers,
   method: ZillaRequestMethod | string,
-  body?: string
+  body?: unknown
 ): Promise<ZillaRawResponse> => {
   const useAxios = step.request.files;
   const res = useAxios
     ? await upload(url, step, headers)
-    : await fetch(url, { method, headers, body });
+    : await fetch(url, { method, headers, body: body as BodyInit | undefined });
   return useAxios
     ? parseAxiosResponse(res as AxiosResponse)
     : parseResponse(res as Response);

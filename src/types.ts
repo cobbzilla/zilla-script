@@ -77,6 +77,7 @@ export type ZillaScriptRequest = {
   headers?: ZillaScriptHeader[];
   contentType?: string; // default is application/json. This shortcut is equivalent to sending {name:"Content-Type", value:"..."} in the headers
   body?: object | string | number | boolean; // any JSON object
+  bodyVar?: string;
 };
 
 export type ZillaStatusClass = "1xx" | "2xx" | "3xx" | "4xx" | "5xx";

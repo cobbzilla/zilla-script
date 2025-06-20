@@ -1,12 +1,13 @@
 import Handlebars from "handlebars";
 import { parseSimpleTime, sleep } from "zilla-util";
 import { ZillaResponseValidationResult, ZillaStepResult } from "./types.js";
-import { Ctx, evalTpl, walk } from "./helpers.js";
+import { Ctx, evalTpl } from "./helpers.js";
 import { headerName } from "./util.js";
 import { extract } from "./extract.js";
 import {
   assignResponseSession,
   editVars,
+  getBody,
   loadIncludeFile,
   loadSubScriptSteps,
   makeRequest,
@@ -157,14 +158,11 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         setRequestSession(srv, sessions, step, headers);
       }
 
-      const body =
-        step.request.body !== undefined
-          ? JSON.stringify(walk(step.request.body, ctx))
-          : undefined;
+      const body = getBody(step, ctx, vars);
 
       logger.info(`${stepPrefix} → ${method} ${url}`, {
         headers: [...headers.entries()],
-        body: body ? JSON.parse(body) : undefined,
+        body,
       });
 
       /* ---------- send request ------------------------------------- */
