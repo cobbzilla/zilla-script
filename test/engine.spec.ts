@@ -10,23 +10,11 @@ import {
   ZillaScriptResult,
   ZillaScriptVars,
 } from "../src/index.js";
-import { createServerHarness } from "./harness.js";
-
-// a 1-pixel PNG
-const getMinimalPng = (): Buffer => {
-  return Buffer.from([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-    0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
-    0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x60, 0x00, 0x00, 0x00,
-    0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, 0x33, 0x00, 0x00, 0x00, 0x00, 0x49,
-    0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
-  ]);
-};
-
-const getMinimalPngAsync = async (): Promise<Buffer> => {
-  return getMinimalPng();
-};
+import {
+  createServerHarness,
+  getMinimalPng,
+  getMinimalPngAsync,
+} from "./harness.js";
 
 let init: ZillaScriptInit;
 
@@ -419,5 +407,35 @@ describe("ZillaScript engine", function () {
     expect(step0.status).to.equal(200);
     expect(step0.validation.result).to.be.true;
     expect((step0.body as any).echoed.foo).to.be.eq("foobar");
+  });
+
+  it("downloads a binary file", async () => {
+    const script: ZillaScript = {
+      script: "binary file",
+      init,
+      steps: [
+        {
+          step: "download image",
+          request: { get: "image" },
+          response: {
+            validate: [
+              {
+                id: "content length is greater than zero",
+                check: ["gt header.content_length 0"],
+              },
+              {
+                id: "content type starts with image/",
+                check: ["startsWith header.content_type 'image/'"],
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const result = await runZillaScript(script);
+    expect(result.stepResults).to.have.lengthOf(1);
+    const step0 = result.stepResults[0];
+    expect(step0.status).to.equal(200);
+    expect(step0.validation.result).to.be.true;
   });
 });

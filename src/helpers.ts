@@ -4,6 +4,8 @@ import { isEmpty } from "zilla-util";
 const isComparable = (v: unknown): v is string | number =>
   typeof v === "string" || typeof v === "number";
 
+const jsonNumberRegex = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
 Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   /* plain equality always works (covers booleans too) */
   if (op === "empty") return isEmpty(l);
@@ -25,8 +27,29 @@ Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
       `operator ${op} requires string | number operands: invalid right operand: ${r}`
     );
   }
-  if (typeof l !== typeof r)
-    throw new Error(`operator ${op} requires operands of the same type`);
+  if (typeof l !== typeof r) {
+    if (typeof l === "number" && typeof r === "string") {
+      // If left operand is a number and the right operand looks like a number, make the right operand a number
+      const rString = `${r}`.toLowerCase();
+      if (jsonNumberRegex.test(rString)) {
+        if (rString.includes(".") || rString.includes("e")) {
+          r = parseFloat(rString);
+        } else {
+          r = parseInt(rString);
+        }
+      }
+    } else if (typeof r === "number" && typeof l === "string") {
+      // If the right operand is a number and the left operand looks like a number, make the left operand a number
+      const lString = `${l}`.toLowerCase();
+      if (jsonNumberRegex.test(lString)) {
+        if (lString.includes(".") || lString.includes("e")) {
+          l = parseFloat(lString);
+        } else {
+          l = parseInt(lString);
+        }
+      }
+    }
+  }
 
   const numericOps: Record<string, (a: number, b: number) => boolean> = {
     ">": (a, b) => a > b,

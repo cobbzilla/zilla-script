@@ -13,10 +13,11 @@ export type ZillaRawResponseHeaderArray = {
     value: string;
 }[];
 export type ZillaRawResponse = {
+    raw?: boolean;
     status: number;
     statusText?: string;
     headers: ZillaRawResponseHeaderArray;
-    body: string | object;
+    body: string | object | Buffer;
 };
 export type ZillaScriptVars = Record<string, unknown | null>;
 export type ZillaScriptResponseHandler = (response: ZillaRawResponse, args: string[], vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | Promise<ZillaRawResponse>;

@@ -17,11 +17,14 @@ export const parseResponse = async (
   res: Response
 ): Promise<ZillaRawResponse> => {
   const resHeadersArr = toHeaderArray(res.headers);
-  const resBody: object | string = (
-    res.headers.get("content-type") ?? ""
-  ).includes("application/json")
-    ? await res.json()
-    : await res.text();
+  const contentType = res.headers.get("content-type") ?? "";
+  const resBody: object | string = await (contentType.includes(
+    "application/json"
+  )
+    ? res.json()
+    : contentType.startsWith("text/")
+    ? res.text()
+    : res.bytes());
   return {
     status: res.status,
     statusText: res.statusText,
@@ -43,7 +46,9 @@ export const parseAxiosResponse = async <T = unknown>(
   const contentType: string = res.headers["content-type"] ?? "";
   const body: object | string = contentType.includes("application/json")
     ? (res.data as object)
-    : String(res.data);
+    : contentType.includes("text/")
+    ? String(res.data)
+    : Buffer.from(res.data as Uint8Array);
 
   return {
     status: res.status,

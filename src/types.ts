@@ -15,10 +15,11 @@ export type ZillaScriptServer = {
 export type ZillaRawResponseHeaderArray = { name: string; value: string }[];
 
 export type ZillaRawResponse = {
+  raw?: boolean;
   status: number;
   statusText?: string;
   headers: ZillaRawResponseHeaderArray;
-  body: string | object;
+  body: string | object | Buffer;
 };
 
 export type ZillaScriptVars = Record<string, unknown | null>;
