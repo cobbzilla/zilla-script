@@ -22,6 +22,7 @@ export type ZillaScriptVars = Record<string, unknown | null>;
 export type ZillaScriptResponseHandler = (response: ZillaRawResponse, args: string[], vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | Promise<ZillaRawResponse>;
 export type ZillaScriptInit = {
     servers?: ZillaScriptServer[];
+    session?: ZillaScriptSendSession;
     sessions?: Record<string, string>;
     vars?: ZillaScriptVars;
     handlers?: Record<string, ZillaScriptResponseHandler>;

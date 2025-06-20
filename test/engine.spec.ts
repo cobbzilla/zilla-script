@@ -106,9 +106,9 @@ describe("ZillaScript engine", function () {
           {
             server: "local",
             base: baseUrl,
-            session: { cookie: "sess" },
           },
         ],
+        session: { cookie: "sess" },
         handlers: {
           add_42_to_number: (
             raw: ZillaRawResponse,

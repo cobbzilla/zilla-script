@@ -36,6 +36,7 @@ export const runZillaScript = async (
     ...s,
     name: s.server ?? `default-${i}`,
     base: evalTpl(s.base, { env }),
+    session: s.session ? s.session : init.session,
   }));
   const defServer = servers[0].name;
 
