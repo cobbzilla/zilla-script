@@ -99,6 +99,34 @@ describe("ZillaScript engine", function () {
     expect(step.body).to.deep.equal({ ok: true, echoed: { foo: "bar" } });
   });
 
+  it("captures a value from an array element", async () => {
+    const script: ZillaScript = {
+      script: "capture-array",
+      init,
+      steps: [
+        {
+          step: "post-array",
+          request: {
+            post: "array",
+          },
+          response: {
+            capture: {
+              foo1: { body: "[0].foo" },
+              foo2: { body: "[1].foo" },
+              foo3: { body: "[2].foo" },
+            },
+            validate: [
+              { id: "check foo1", check: ["eq foo1 1"] },
+              { id: "check foo2", check: ["eq foo2 2"] },
+              { id: "check foo3", check: ["eq foo3 3"] },
+            ],
+          },
+        },
+      ],
+    };
+    await verifySingleStepOk(script);
+  });
+
   it("creates two independent sessions and manipulates data", async () => {
     const script: ZillaScript = {
       script: "session-manipulation",

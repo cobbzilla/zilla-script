@@ -45,6 +45,12 @@ export const createServerHarness = async (
     })
   );
 
+  /* POST /array  -> return array ---------------------------------- */
+  router.post(
+    "/array",
+    eventHandler(async () => [{ foo: 1 }, { foo: 2 }, { foo: 3 }])
+  );
+
   /* PUT /session  -> new session ---------------------------------- */
   router.put(
     "/session",
