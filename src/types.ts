@@ -162,7 +162,10 @@ export type ZillaScriptLoop = {
 
 export type ZillaStepHandlerParams = Record<string, unknown | unknown[]>;
 
-export type ZillaStepHandlers = Record<string, ZillaStepHandlerParams>;
+export type ZillaStepHandler = {
+  handler: string;
+  params?: ZillaStepHandlerParams;
+};
 
 export type ZillaScriptStep = {
   step?: string;
@@ -176,7 +179,7 @@ export type ZillaScriptStep = {
   loop?: ZillaScriptLoop;
   request?: ZillaScriptRequest;
   response?: ZillaScriptResponse; // if response is omitted, we only validate that status must be 200
-  handlers?: ZillaStepHandlers; // handlers to call before validation
+  handlers?: ZillaStepHandler[]; // handlers to call before validation
 };
 
 export type ZillaScriptParam = { required?: boolean; defaultValue?: unknown };

@@ -113,7 +113,10 @@ export type ZillaScriptLoop = {
     include?: string;
 };
 export type ZillaStepHandlerParams = Record<string, unknown | unknown[]>;
-export type ZillaStepHandlers = Record<string, ZillaStepHandlerParams>;
+export type ZillaStepHandler = {
+    handler: string;
+    params?: ZillaStepHandlerParams;
+};
 export type ZillaScriptStep = {
     step?: string;
     include?: string | ZillaScript;
@@ -126,7 +129,7 @@ export type ZillaScriptStep = {
     loop?: ZillaScriptLoop;
     request?: ZillaScriptRequest;
     response?: ZillaScriptResponse;
-    handlers?: ZillaStepHandlers;
+    handlers?: ZillaStepHandler[];
 };
 export type ZillaScriptParam = {
     required?: boolean;

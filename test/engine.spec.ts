@@ -224,7 +224,9 @@ describe("ZillaScript engine", function () {
             get: "session",
             session: "session-two",
           },
-          handlers: { add_42_to_number: { addend: "addend" } },
+          handlers: [
+            { handler: "add_42_to_number", params: { addend: "addend" } },
+          ],
           response: {
             status: 200,
             validate: [

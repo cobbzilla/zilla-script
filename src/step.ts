@@ -199,19 +199,19 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
 
       /* ---------- call handlers ------------------------------------ */
       if (step.handlers) {
-        for (const [stepHandlerName, stepHandlerParams] of Object.entries(
-          step.handlers
-        )) {
-          const initHandler = handlers[stepHandlerName];
+        for (const stepHandler of step.handlers) {
+          const hName = stepHandler.handler;
+          const stepHandlerParams = stepHandler.params ?? {};
+          const initHandler = handlers[hName];
           if (!initHandler) {
-            logger.error(`${stepPrefix} handler not found: ${stepHandlerName}`);
+            logger.error(`${stepPrefix} handler not found: ${hName}`);
           }
           if (initHandler.args) {
             for (const [field, config] of Object.entries(initHandler.args)) {
               if (typeof stepHandlerParams[field] === "undefined") {
                 if (config.required) {
                   throw new Error(
-                    `${stepPrefix} handler=${stepHandlerName} missing required arg=${field}`
+                    `${stepPrefix} handler=${hName} missing required arg=${field}`
                   );
                 } else if (config.default) {
                   stepHandlerParams[field] = config.default;
@@ -226,7 +226,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
                 value,
                 cx,
                 initHandler.args ? initHandler.args[param].type : undefined,
-                `${stepPrefix} handler=${stepHandlerName} wrong type for arg=${param}`
+                `${stepPrefix} handler=${hName} wrong type for arg=${param}`
               ),
             ])
           );

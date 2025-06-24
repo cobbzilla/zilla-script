@@ -87,10 +87,12 @@ export const processStep = (
   }
   if (step.handlers) {
     // if the step has handlers, verify each handler has been defined (in init)
-    for (const h of Object.keys(step.handlers)) {
-      if (!Object.keys(handlers).includes(h)) {
+    for (const h of step.handlers) {
+      if (!Object.keys(handlers).includes(h.handler)) {
         throw new Error(
-          `ERROR handler=${h} not found for step=${JSON.stringify(step)}`
+          `ERROR handler=${h.handler} not found for step=${JSON.stringify(
+            step
+          )}`
         );
       }
     }
