@@ -241,7 +241,7 @@ describe("ZillaScript engine", function () {
             session: "session-two",
           },
           handlers: [
-            { handler: "add_42_to_number", params: { addend: "addend" } },
+            { handler: "add_42_to_number", params: { addend: "{{addend}}" } },
             {
               handler: "takes_an_object",
               params: {

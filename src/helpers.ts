@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { deepGet, deepTransform, isEmpty } from "zilla-util";
+import { deepTransform, isEmpty } from "zilla-util";
 
 const isComparable = (v: unknown): v is string | number =>
   typeof v === "string" || typeof v === "number";
@@ -144,34 +144,35 @@ export const walk = (v: unknown, ctx: Ctx): unknown => {
   return v;
 };
 
-export const evalArg = (val: unknown, ctx: Ctx): unknown => {
-  if (typeof val !== "string")
-    return deepTransform(
-      val,
-      (v: unknown) => typeof v === "string" && v.startsWith("{{"),
-      (v: unknown) => evalTpl(`${v}`, ctx)
-    );
-  if (val.includes("{{")) return evalTpl(val, ctx);
-  if (val.startsWith("'") && val.endsWith("'"))
-    return val.substring(1, val.length - 1);
-  const dotPos = val.indexOf(".");
-  if (dotPos === val.length) return val;
-  const varName = dotPos === -1 ? val : val.substring(0, dotPos);
-  if (Object.keys(ctx).includes(varName)) {
-    return dotPos === -1
-      ? ctx[varName]
-      : deepGet(ctx[varName], val.substring(dotPos + 1));
-  }
-  return val;
-};
-
 export const evalArgWithType = (
   val: unknown,
   ctx: Ctx,
   requiredType: string | undefined,
   errorPrefix: string
 ): unknown => {
-  const evaluated = evalArg(val, ctx);
+  let evaluated =
+    typeof val !== "undefined" && val != null
+      ? deepTransform(
+          val,
+          (v: unknown) => typeof v === "string" && v.startsWith("{{"),
+          (v: unknown) => evalTpl(`${v}`, ctx)
+        )
+      : val;
+  if (requiredType && typeof evaluated === "string") {
+    switch (requiredType) {
+      case "number":
+        if (evaluated.match("^\\d+$")) {
+          evaluated = parseInt(evaluated);
+        } else if (evaluated.match(jsonNumberRegex)) {
+          evaluated = parseFloat(evaluated);
+        }
+        break;
+      case "boolean":
+        if (["true", "false"].includes(evaluated.toLowerCase())) {
+          evaluated = evaluated.toLowerCase() === "true";
+        }
+    }
+  }
   if (requiredType && typeof evaluated !== requiredType) {
     throw new Error(
       `${errorPrefix} expected type=${requiredType} found=${typeof evaluated}`
