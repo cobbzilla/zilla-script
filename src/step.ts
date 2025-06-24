@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 import { parseSimpleTime, sleep } from "zilla-util";
 import { ZillaResponseValidationResult, ZillaStepResult } from "./types.js";
-import { Ctx, evalTpl } from "./helpers.js";
+import { Ctx, evalArgWithType, evalTpl } from "./helpers.js";
 import { headerName } from "./util.js";
 import { extract } from "./extract.js";
 import {
@@ -198,22 +198,41 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       };
 
       /* ---------- call handlers ------------------------------------ */
-      if (step.handler) {
-        for (const h of step.handler) {
-          const handlerParts = h.split(" ");
-          const handler = handlers[handlerParts[0]];
-          if (!handler) {
-            logger.error(`${stepPrefix} handler not found: ${h}`);
+      if (step.handlers) {
+        for (const [stepHandlerName, stepHandlerParams] of Object.entries(
+          step.handlers
+        )) {
+          const initHandler = handlers[stepHandlerName];
+          if (!initHandler) {
+            logger.error(`${stepPrefix} handler not found: ${stepHandlerName}`);
           }
-          const args = handlerParts.length > 1 ? handlerParts.slice(1) : [];
+          if (initHandler.args) {
+            for (const [field, config] of Object.entries(initHandler.args)) {
+              if (typeof stepHandlerParams[field] === "undefined") {
+                if (config.required) {
+                  throw new Error(
+                    `${stepPrefix} handler=${stepHandlerName} missing required arg=${field}`
+                  );
+                } else if (config.default) {
+                  stepHandlerParams[field] = config.default;
+                }
+              }
+            }
+          }
+          const args = Object.fromEntries(
+            Object.entries(stepHandlerParams).map(([param, value]) => [
+              param,
+              evalArgWithType(
+                value,
+                cx,
+                initHandler.args ? initHandler.args[param].type : undefined,
+                `${stepPrefix} handler=${stepHandlerName} wrong type for arg=${param}`
+              ),
+            ])
+          );
           const varsForHandler = { ...vars, ...sessions };
           const origKeys = Object.keys(varsForHandler);
-          res = await handler(
-            res,
-            args.map((a) => evalTpl(a, cx)),
-            varsForHandler,
-            step
-          );
+          res = await initHandler.func(res, args, varsForHandler, step);
           for (const [k, v] of Object.entries(varsForHandler)) {
             if (!origKeys.includes(k)) {
               cx[k] = vars[k] = v;

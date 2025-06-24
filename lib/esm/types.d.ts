@@ -20,13 +20,24 @@ export type ZillaRawResponse = {
     body: string | object | Buffer;
 };
 export type ZillaScriptVars = Record<string, unknown | null>;
-export type ZillaScriptResponseHandler = (response: ZillaRawResponse, args: string[], vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | Promise<ZillaRawResponse>;
+export type ZillaScriptResponseHandlerFunc = (response: ZillaRawResponse, args: Record<string, unknown>, vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | Promise<ZillaRawResponse>;
+export type ZillaHandlerArgType = "string" | "number" | "boolean" | "object" | "undefined" | "function" | "symbol" | "bigint";
+export type ZillaHandlerArg = {
+    type?: ZillaHandlerArgType;
+    default?: unknown;
+    required?: boolean;
+};
+export type ZillaScriptResponseHandler = {
+    args?: Record<string, ZillaHandlerArg>;
+    func: ZillaScriptResponseHandlerFunc;
+};
+export type ZillaScriptInitHandlers = Record<string, ZillaScriptResponseHandler>;
 export type ZillaScriptInit = {
     servers?: ZillaScriptServer[];
     session?: ZillaScriptSendSession;
     sessions?: Record<string, string>;
     vars?: ZillaScriptVars;
-    handlers?: Record<string, ZillaScriptResponseHandler>;
+    handlers?: ZillaScriptInitHandlers;
 };
 export type ZillaScriptHeader = {
     name: string;
@@ -101,6 +112,8 @@ export type ZillaScriptLoop = {
     steps?: ZillaScriptStep[];
     include?: string;
 };
+export type ZillaStepHandlerParams = Record<string, unknown | unknown[]>;
+export type ZillaStepHandlers = Record<string, ZillaStepHandlerParams>;
 export type ZillaScriptStep = {
     step?: string;
     include?: string | ZillaScript;
@@ -113,7 +126,7 @@ export type ZillaScriptStep = {
     loop?: ZillaScriptLoop;
     request?: ZillaScriptRequest;
     response?: ZillaScriptResponse;
-    handler?: string | string[];
+    handlers?: ZillaStepHandlers;
 };
 export type ZillaScriptParam = {
     required?: boolean;

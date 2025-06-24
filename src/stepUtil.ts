@@ -5,10 +5,10 @@ import {
   ZillaRawResponse,
   ZillaRequestMethod,
   ZillaScript,
+  ZillaScriptInitHandlers,
   ZillaScriptLoop,
   ZillaScriptOptions,
   ZillaScriptRequest,
-  ZillaScriptResponseHandler,
   ZillaScriptSendSession,
   ZillaScriptServer,
   ZillaScriptStep,
@@ -40,21 +40,13 @@ export type ZillaScriptStepOptions = {
   defServer: string;
   vars: Record<string, unknown>;
   sessions: Record<string, string>;
-  handlers: Record<
-    string,
-    (
-      response: ZillaRawResponse,
-      args: string[],
-      vars: ZillaScriptVars,
-      step: ZillaScriptStep
-    ) => ZillaRawResponse | Promise<ZillaRawResponse>
-  >;
+  handlers: ZillaScriptInitHandlers;
   scriptOpts: ZillaScriptOptions;
 };
 
 export const processStep = (
   step: ZillaScriptStep,
-  handlers: Record<string, ZillaScriptResponseHandler>
+  handlers: ZillaScriptInitHandlers
 ): ZillaScriptProcessedStep => {
   if (step.loop) {
     if (!step.loop.items) {
@@ -93,13 +85,10 @@ export const processStep = (
     // if we still don't have a method, assume GET
     step.request.method = ZillaRequestMethod.Get;
   }
-  if (step.handler) {
-    // if the step has a handler, verify that the handler has been defined (in init)
-    if (typeof step.handler === "string") {
-      step.handler = [step.handler];
-    }
-    for (const h of step.handler) {
-      if (!Object.keys(handlers).includes(h.split(" ")[0])) {
+  if (step.handlers) {
+    // if the step has handlers, verify each handler has been defined (in init)
+    for (const h of Object.keys(step.handlers)) {
+      if (!Object.keys(handlers).includes(h)) {
         throw new Error(
           `ERROR handler=${h} not found for step=${JSON.stringify(step)}`
         );

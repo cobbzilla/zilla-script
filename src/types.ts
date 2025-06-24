@@ -24,19 +24,45 @@ export type ZillaRawResponse = {
 
 export type ZillaScriptVars = Record<string, unknown | null>;
 
-export type ZillaScriptResponseHandler = (
+export type ZillaScriptResponseHandlerFunc = (
   response: ZillaRawResponse,
-  args: string[],
+  args: Record<string, unknown>,
   vars: ZillaScriptVars,
   step: ZillaScriptStep
 ) => ZillaRawResponse | Promise<ZillaRawResponse>;
+
+export type ZillaHandlerArgType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "object"
+  | "undefined"
+  | "function"
+  | "symbol"
+  | "bigint";
+
+export type ZillaHandlerArg = {
+  type?: ZillaHandlerArgType;
+  default?: unknown;
+  required?: boolean;
+};
+
+export type ZillaScriptResponseHandler = {
+  args?: Record<string, ZillaHandlerArg>;
+  func: ZillaScriptResponseHandlerFunc;
+};
+
+export type ZillaScriptInitHandlers = Record<
+  string,
+  ZillaScriptResponseHandler
+>;
 
 export type ZillaScriptInit = {
   servers?: ZillaScriptServer[];
   session?: ZillaScriptSendSession;
   sessions?: Record<string, string>; // existing sessions, name->token
   vars?: ZillaScriptVars; // predefined vars
-  handlers?: Record<string, ZillaScriptResponseHandler>;
+  handlers?: ZillaScriptInitHandlers;
 };
 
 export type ZillaScriptHeader = {
@@ -134,6 +160,10 @@ export type ZillaScriptLoop = {
   include?: string;
 };
 
+export type ZillaStepHandlerParams = Record<string, unknown | unknown[]>;
+
+export type ZillaStepHandlers = Record<string, ZillaStepHandlerParams>;
+
 export type ZillaScriptStep = {
   step?: string;
   include?: string | ZillaScript;
@@ -146,7 +176,7 @@ export type ZillaScriptStep = {
   loop?: ZillaScriptLoop;
   request?: ZillaScriptRequest;
   response?: ZillaScriptResponse; // if response is omitted, we only validate that status must be 200
-  handler?: string | string[]; // name of handler to call before validation
+  handlers?: ZillaStepHandlers; // handlers to call before validation
 };
 
 export type ZillaScriptParam = { required?: boolean; defaultValue?: unknown };

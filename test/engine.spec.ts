@@ -111,13 +111,16 @@ describe("ZillaScript engine", function () {
         ],
         session: { cookie: "sess" },
         handlers: {
-          add_42_to_number: (
-            raw: ZillaRawResponse,
-            args: string[],
-            vars: ZillaScriptVars
-          ) => {
-            vars.new_var = 42 + parseInt(args[0]);
-            return raw;
+          add_42_to_number: {
+            args: { addend: { required: true, type: "number" } },
+            func: (
+              raw: ZillaRawResponse,
+              args: Record<string, unknown>,
+              vars: ZillaScriptVars
+            ) => {
+              vars.new_var = 42 + (args.addend as number);
+              return raw;
+            },
           },
         },
       },
@@ -221,7 +224,7 @@ describe("ZillaScript engine", function () {
             get: "session",
             session: "session-two",
           },
-          handler: "add_42_to_number {{addend}}",
+          handlers: { add_42_to_number: { addend: "addend" } },
           response: {
             status: 200,
             validate: [

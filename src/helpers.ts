@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { isEmpty } from "zilla-util";
+import { deepGet, isEmpty } from "zilla-util";
 
 const isComparable = (v: unknown): v is string | number =>
   typeof v === "string" || typeof v === "number";
@@ -142,4 +142,35 @@ export const walk = (v: unknown, ctx: Ctx): unknown => {
       ])
     );
   return v;
+};
+
+export const evalArg = (val: unknown, ctx: Ctx): unknown => {
+  if (typeof val !== "string") return val;
+  if (val.includes("{{")) return evalTpl(val, ctx);
+  if (val.startsWith("'") && val.endsWith("'"))
+    return val.substring(1, val.length - 1);
+  const dotPos = val.indexOf(".");
+  if (dotPos === val.length) return val;
+  const varName = dotPos === -1 ? val : val.substring(0, dotPos);
+  if (Object.keys(ctx).includes(varName)) {
+    return dotPos === -1
+      ? ctx[varName]
+      : deepGet(ctx[varName], val.substring(dotPos + 1));
+  }
+  return val;
+};
+
+export const evalArgWithType = (
+  val: unknown,
+  ctx: Ctx,
+  requiredType: string | undefined,
+  errorPrefix: string
+): unknown => {
+  const evaluated = evalArg(val, ctx);
+  if (requiredType && typeof evaluated !== requiredType) {
+    throw new Error(
+      `${errorPrefix} expected type=${requiredType} found=${typeof evaluated}`
+    );
+  }
+  return evaluated;
 };
