@@ -45,6 +45,7 @@ export type ZillaHandlerArg = {
   type?: ZillaHandlerArgType;
   default?: unknown;
   required?: boolean;
+  opaque?: boolean;
 };
 
 export type ZillaScriptResponseHandler = {

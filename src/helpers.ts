@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { deepGet, isEmpty } from "zilla-util";
+import { deepGet, deepTransform, isEmpty } from "zilla-util";
 
 const isComparable = (v: unknown): v is string | number =>
   typeof v === "string" || typeof v === "number";
@@ -145,7 +145,12 @@ export const walk = (v: unknown, ctx: Ctx): unknown => {
 };
 
 export const evalArg = (val: unknown, ctx: Ctx): unknown => {
-  if (typeof val !== "string") return val;
+  if (typeof val !== "string")
+    return deepTransform(
+      val,
+      (v: unknown) => typeof v === "string" && v.startsWith("{{"),
+      (v: unknown) => evalTpl(`${v}`, ctx)
+    );
   if (val.includes("{{")) return evalTpl(val, ctx);
   if (val.startsWith("'") && val.endsWith("'"))
     return val.substring(1, val.length - 1);

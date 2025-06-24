@@ -222,12 +222,14 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           const args = Object.fromEntries(
             Object.entries(stepHandlerParams).map(([param, value]) => [
               param,
-              evalArgWithType(
-                value,
-                cx,
-                initHandler.args ? initHandler.args[param].type : undefined,
-                `${stepPrefix} handler=${hName} wrong type for arg=${param}`
-              ),
+              initHandler.args && initHandler.args[param].opaque
+                ? value
+                : evalArgWithType(
+                    value,
+                    cx,
+                    initHandler.args ? initHandler.args[param].type : undefined,
+                    `${stepPrefix} handler=${hName} wrong type for arg=${param}`
+                  ),
             ])
           );
           const varsForHandler = { ...vars, ...sessions };

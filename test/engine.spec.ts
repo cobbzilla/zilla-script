@@ -122,6 +122,22 @@ describe("ZillaScript engine", function () {
               return raw;
             },
           },
+          takes_an_object: {
+            args: {
+              some_object: { required: true, type: "object" },
+              opaque_arg: { required: true, opaque: true },
+            },
+            func: (
+              raw: ZillaRawResponse,
+              args: Record<string, unknown>,
+              vars: ZillaScriptVars
+            ) => {
+              vars.obj_result =
+                "echo:" + (args.some_object as Record<string, string>).value;
+              vars.obj_opaque_result = `echo:${args.opaque_arg}`;
+              return raw;
+            },
+          },
         },
       },
       steps: [
@@ -226,6 +242,13 @@ describe("ZillaScript engine", function () {
           },
           handlers: [
             { handler: "add_42_to_number", params: { addend: "addend" } },
+            {
+              handler: "takes_an_object",
+              params: {
+                some_object: { value: "{{addend}}" },
+                opaque_arg: "{{addend}}",
+              },
+            },
           ],
           response: {
             status: 200,
@@ -238,6 +261,8 @@ describe("ZillaScript engine", function () {
                   "compare body.b 'undefined'", // body.b is undefined
                   "compare body.c 'undefined'", // body.c is undefined
                   "compare new_var '==' 53", // handler add_42_to_number creates this
+                  "compare obj_result '==' 'echo:11'", // handler takes_an_object creates this
+                  "compare obj_opaque_result '==' 'echo:{{addend}}'", // handler takes_an_object creates this
                 ],
               },
             ],
