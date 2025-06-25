@@ -1,12 +1,11 @@
 import Handlebars from "handlebars";
-import { parseSimpleTime, sleep } from "zilla-util";
 import {
   ZillaRawResponse,
   ZillaResponseValidationResult,
   ZillaStepResult,
 } from "./types.js";
 import { Ctx, evalTpl } from "./helpers.js";
-import { headerName } from "./util.js";
+import { delay, headerName } from "./util.js";
 import { extract } from "./extract.js";
 import {
   assignResponseSession,
@@ -45,12 +44,10 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       : "(unnamed)";
     stepPrefix = `*** [STEP "${stepName}"] `;
     if (step.delay) {
-      logger.info(`${stepPrefix} delaying ${step.delay}`);
-      await sleep(
-        typeof step.delay === "number"
-          ? step.delay
-          : parseSimpleTime(step.delay)
+      logger.info(
+        `${stepPrefix} waiting for delay=${step.delay} before starting step`
       );
+      await delay(step.delay);
     }
     logger.info(`${stepPrefix} begin`);
 

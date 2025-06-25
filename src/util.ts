@@ -1,6 +1,7 @@
 import { AxiosResponse, AxiosRequestHeaders, AxiosHeaders } from "axios";
 import { ZillaRawResponse, ZillaRawResponseHeaderArray } from "./types.js";
 import FormData from "form-data";
+import { parseSimpleTime, sleep } from "zilla-util";
 
 export const headerName = (h: string): string =>
   h.replace(/[^a-z0-9]/gi, "_").toLowerCase();
@@ -76,4 +77,11 @@ export const toAxiosHeaders = (
     result[name] = value;
   });
   return result;
+};
+
+export const delay = async (duration?: number | string) => {
+  if (!duration) return;
+  await sleep(
+    typeof duration === "number" ? duration : parseSimpleTime(duration)
+  );
 };

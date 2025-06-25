@@ -6,6 +6,7 @@ import {
   ZillaScriptStep,
 } from "./types.js";
 import { ZillaScriptProcessedRequest } from "./stepUtil.js";
+import { delay } from "./util.js";
 
 export const runStepHandlers = async <T>(
   step: ZillaScriptStep & {
@@ -22,6 +23,12 @@ export const runStepHandlers = async <T>(
   if (step.handlers) {
     for (const stepHandler of step.handlers) {
       const hName = stepHandler.handler;
+      if (stepHandler.delay) {
+        logger.info(
+          `${stepPrefix} waiting for delay=${stepHandler.delay} before starting handler=${hName}`
+        );
+        await delay(stepHandler.delay);
+      }
       const stepHandlerParams = stepHandler.params ?? {};
       const initHandler = handlers[hName];
       if (!initHandler) {

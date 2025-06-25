@@ -172,6 +172,7 @@ export type ZillaStepHandlerParams = Record<string, unknown | unknown[]>;
 
 export type ZillaStepHandler = {
   handler: string;
+  delay?: number | string;
   params?: ZillaStepHandlerParams;
 };
 
