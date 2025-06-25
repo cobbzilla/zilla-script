@@ -106,9 +106,7 @@ describe("ZillaScript engine", function () {
       steps: [
         {
           step: "post-array",
-          request: {
-            post: "array",
-          },
+          request: { post: "array" },
           response: {
             capture: {
               foo1: { body: "[0].foo" },
@@ -125,6 +123,30 @@ describe("ZillaScript engine", function () {
               { id: "check firstFoo", check: ["eq firstFoo.foo 1"] },
               { id: "check secondFoo", check: ["eq secondFoo.foo 2"] },
               { id: "check thirdFoo", check: ["eq thirdFoo.foo 3"] },
+            ],
+          },
+        },
+      ],
+    };
+    await verifySingleStepOk(script);
+  });
+
+  it("sends a query properly", async () => {
+    const script: ZillaScript = {
+      script: "echo-query",
+      init,
+      steps: [
+        {
+          step: "echo-query",
+          request: {
+            post: "query",
+            query: { foo: "bar", baz: 2, quux: "must/be escaped!" },
+          },
+          response: {
+            validate: [
+              { id: "check foo", check: ["eq body.foo 'bar'"] },
+              { id: "check bar", check: ["eq body.baz 2"] },
+              { id: "check baz", check: ["eq body.quux 'must/be escaped!'"] },
             ],
           },
         },

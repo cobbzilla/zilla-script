@@ -142,7 +142,22 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         (step.request.uri.startsWith("/")
           ? step.request.uri.substring(1)
           : step.request.uri);
-      const url = rawUrl.includes("{{") ? evalTpl(rawUrl, ctx) : rawUrl;
+      const query = step.request.query
+        ? "?" +
+          Object.entries(step.request.query)
+            .filter(([, v]) => typeof v !== "undefined")
+            .map(
+              ([k, v]) =>
+                encodeURIComponent(k) +
+                "=" +
+                (typeof v === "string"
+                  ? encodeURIComponent(v.includes("{{") ? evalTpl(v, ctx) : v)
+                  : v)
+            )
+            .join("&")
+        : "";
+      const url =
+        (rawUrl.includes("{{") ? evalTpl(rawUrl, ctx) : rawUrl) + query;
 
       const method = step.request.method ?? "GET";
       const headers = new Headers();

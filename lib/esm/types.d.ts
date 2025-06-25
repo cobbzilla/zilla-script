@@ -67,6 +67,7 @@ export type ZillaScriptRequest = {
     trace?: string;
     uri?: string;
     method?: ZillaRequestMethod;
+    query?: Record<string, string | number | boolean | null | undefined>;
     files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
     session?: string;
     headers?: ZillaScriptHeader[];

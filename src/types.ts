@@ -99,6 +99,9 @@ export type ZillaScriptRequest = {
   uri?: string;
   method?: ZillaRequestMethod;
 
+  // optional query string (can also be included in uri)
+  query?: Record<string, string | number | boolean | null | undefined>;
+
   files?: Record<string, string | Buffer | Promise<string> | Promise<Buffer>>;
   session?: string; // name of a session to use. the session must have been captured in an earlier step
   headers?: ZillaScriptHeader[];

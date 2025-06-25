@@ -4,6 +4,7 @@ import {
   createRouter,
   eventHandler,
   getHeader,
+  getQuery,
   readBody,
   setHeader,
   toNodeListener,
@@ -49,6 +50,12 @@ export const createServerHarness = async (
   router.post(
     "/array",
     eventHandler(async () => [{ foo: 1 }, { foo: 2 }, { foo: 3 }])
+  );
+
+  /* POST /query  -> echo query as object ------------------------- */
+  router.post(
+    "/query",
+    eventHandler(async (event) => ({ ...getQuery(event) }))
   );
 
   /* PUT /session  -> new session ---------------------------------- */
