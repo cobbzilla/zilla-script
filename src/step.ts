@@ -91,10 +91,10 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
                 `step=${stepName} param=${name} is required by included script`
               );
             } else if (
-              cfg.defaultValue &&
+              cfg.default &&
               (!step.params || typeof step.params[name] === "undefined")
             ) {
-              vars[name] = cfg.defaultValue;
+              vars[name] = cfg.default;
             } else if (
               step.params &&
               typeof step.params[name] !== "undefined"

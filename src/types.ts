@@ -186,7 +186,7 @@ export type ZillaScriptStep = {
   handlers?: ZillaStepHandler[]; // handlers to call before validation
 };
 
-export type ZillaScriptParam = { required?: boolean; defaultValue?: unknown };
+export type ZillaScriptParam = { required?: boolean; default?: unknown };
 
 export type ZillaScriptParams = Record<string, ZillaScriptParam>;
 

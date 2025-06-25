@@ -135,7 +135,7 @@ export type ZillaScriptStep = {
 };
 export type ZillaScriptParam = {
     required?: boolean;
-    defaultValue?: unknown;
+    default?: unknown;
 };
 export type ZillaScriptParams = Record<string, ZillaScriptParam>;
 export type ZillaScript = {
