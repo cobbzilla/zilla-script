@@ -16,7 +16,7 @@ export const extract = (
 
     /* JSONPath capture */
     return JSONPath({
-      path: `$.${src.body}`,
+      path: Array.isArray(body) ? `$${src.body}` : `$.${src.body}`,
       json: body,
       wrap: false,
     }) as unknown;
