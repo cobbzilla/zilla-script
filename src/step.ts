@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 import { parseSimpleTime, sleep } from "zilla-util";
 import { ZillaResponseValidationResult, ZillaStepResult } from "./types.js";
-import { Ctx, evalArgWithType, evalTpl } from "./helpers.js";
+import { Ctx, evalTpl } from "./helpers.js";
 import { headerName } from "./util.js";
 import { extract } from "./extract.js";
 import {
@@ -17,6 +17,7 @@ import {
   ZillaScriptProcessedStep,
   ZillaScriptStepOptions,
 } from "./stepUtil.js";
+import { runStepHandlers } from "./handler.js";
 
 export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
   const {
@@ -109,6 +110,16 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         };
         const results = await runScriptSteps(includeScriptOpts);
         stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
+
+        await runStepHandlers(
+          step,
+          handlers,
+          logger,
+          stepPrefix,
+          ctx,
+          vars,
+          sessions
+        );
         continue; // next step, everything after this handles a single request
       }
 
@@ -134,6 +145,16 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           const results = await runScriptSteps(subScriptOpts);
           stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
         }
+
+        await runStepHandlers(
+          step,
+          handlers,
+          logger,
+          stepPrefix,
+          ctx,
+          vars,
+          sessions
+        );
         continue; // next step, everything after this handles a single request
       }
 
@@ -213,50 +234,16 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       };
 
       /* ---------- call handlers ------------------------------------ */
-      if (step.handlers) {
-        for (const stepHandler of step.handlers) {
-          const hName = stepHandler.handler;
-          const stepHandlerParams = stepHandler.params ?? {};
-          const initHandler = handlers[hName];
-          if (!initHandler) {
-            logger.error(`${stepPrefix} handler not found: ${hName}`);
-          }
-          if (initHandler.args) {
-            for (const [field, config] of Object.entries(initHandler.args)) {
-              if (typeof stepHandlerParams[field] === "undefined") {
-                if (config.required) {
-                  throw new Error(
-                    `${stepPrefix} handler=${hName} missing required arg=${field}`
-                  );
-                } else if (config.default) {
-                  stepHandlerParams[field] = config.default;
-                }
-              }
-            }
-          }
-          const args = Object.fromEntries(
-            Object.entries(stepHandlerParams).map(([param, value]) => [
-              param,
-              initHandler.args && initHandler.args[param].opaque
-                ? value
-                : evalArgWithType(
-                    value,
-                    cx,
-                    initHandler.args ? initHandler.args[param].type : undefined,
-                    `${stepPrefix} handler=${hName} wrong type for arg=${param}`
-                  ),
-            ])
-          );
-          const varsForHandler = { ...vars, ...sessions };
-          const origKeys = Object.keys(varsForHandler);
-          res = await initHandler.func(res, args, varsForHandler, step);
-          for (const [k, v] of Object.entries(varsForHandler)) {
-            if (!origKeys.includes(k)) {
-              cx[k] = vars[k] = v;
-            }
-          }
-        }
-      }
+      res = await runStepHandlers(
+        step,
+        handlers,
+        logger,
+        stepPrefix,
+        cx,
+        vars,
+        sessions,
+        res
+      );
 
       /* ---------- validation: status check first ------------------- */
       let statusPass;

@@ -25,7 +25,7 @@ export type ZillaRawResponse = {
 export type ZillaScriptVars = Record<string, unknown | null>;
 
 export type ZillaScriptResponseHandlerFunc = (
-  response: ZillaRawResponse,
+  response: ZillaRawResponse | undefined,
   args: Record<string, unknown>,
   vars: ZillaScriptVars,
   step: ZillaScriptStep
