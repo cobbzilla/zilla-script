@@ -20,7 +20,7 @@ export type ZillaRawResponse = {
     body: string | object | Buffer;
 };
 export type ZillaScriptVars = Record<string, unknown | null>;
-export type ZillaScriptResponseHandlerFunc = (response: ZillaRawResponse | undefined, args: Record<string, unknown>, vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | Promise<ZillaRawResponse>;
+export type ZillaScriptResponseHandlerFunc = (response: ZillaRawResponse | undefined, args: Record<string, unknown>, vars: ZillaScriptVars, step: ZillaScriptStep) => ZillaRawResponse | undefined | Promise<ZillaRawResponse> | Promise<undefined>;
 export type ZillaHandlerArgType = "string" | "number" | "boolean" | "object" | "undefined" | "function" | "symbol" | "bigint";
 export type ZillaHandlerArg = {
     type?: ZillaHandlerArgType;
@@ -168,9 +168,9 @@ export type ZillaResponseValidationResult = {
 };
 export type ZillaStepResult = {
     step?: string;
-    status: number;
-    headers: ZillaScriptHeader[];
-    body: object | string | number | boolean;
+    status?: number;
+    headers?: ZillaScriptHeader[];
+    body?: object | string | number | boolean;
     validation: ZillaResponseValidationResult;
     vars: ZillaScriptVars;
     sessions: Record<string, string>;

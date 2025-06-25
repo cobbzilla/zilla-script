@@ -1,6 +1,10 @@
 import Handlebars from "handlebars";
 import { parseSimpleTime, sleep } from "zilla-util";
-import { ZillaResponseValidationResult, ZillaStepResult } from "./types.js";
+import {
+  ZillaRawResponse,
+  ZillaResponseValidationResult,
+  ZillaStepResult,
+} from "./types.js";
 import { Ctx, evalTpl } from "./helpers.js";
 import { headerName } from "./util.js";
 import { extract } from "./extract.js";
@@ -77,6 +81,9 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         editVars(step, vars);
       }
 
+      let res: ZillaRawResponse | undefined = undefined;
+      let hdrMap: Record<string, string> | undefined = undefined;
+
       if (step.include) {
         const include =
           typeof step.include === "string"
@@ -110,20 +117,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         };
         const results = await runScriptSteps(includeScriptOpts);
         stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
-
-        await runStepHandlers(
-          step,
-          handlers,
-          logger,
-          stepPrefix,
-          ctx,
-          vars,
-          sessions
-        );
-        continue; // next step, everything after this handles a single request
-      }
-
-      if (step.loop) {
+      } else if (step.loop) {
         const subScriptSteps = await loadSubScriptSteps(step.loop);
         const items = Array.isArray(step.loop.items)
           ? step.loop.items
@@ -145,91 +139,82 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           const results = await runScriptSteps(subScriptOpts);
           stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
         }
+      } else {
+        const rawUrl =
+          (srv.base.endsWith("/") ? srv.base : srv.base + "/") +
+          (step.request.uri.startsWith("/")
+            ? step.request.uri.substring(1)
+            : step.request.uri);
+        const query = step.request.query
+          ? "?" +
+            Object.entries(step.request.query)
+              .filter(([, v]) => typeof v !== "undefined")
+              .map(
+                ([k, v]) =>
+                  encodeURIComponent(k) +
+                  "=" +
+                  (typeof v === "string"
+                    ? encodeURIComponent(v.includes("{{") ? evalTpl(v, ctx) : v)
+                    : v)
+              )
+              .join("&")
+          : "";
+        const url =
+          (rawUrl.includes("{{") ? evalTpl(rawUrl, ctx) : rawUrl) + query;
 
-        await runStepHandlers(
-          step,
-          handlers,
-          logger,
-          stepPrefix,
-          ctx,
-          vars,
-          sessions
+        const method = step.request.method ?? "GET";
+        const headers = new Headers();
+        headers.set(
+          "Content-Type",
+          step.request.contentType ?? "application/json"
         );
-        continue; // next step, everything after this handles a single request
-      }
+        step.request.headers?.forEach((h) =>
+          headers.set(evalTpl(h.name, ctx), evalTpl(h.value, ctx))
+        );
 
-      const rawUrl =
-        (srv.base.endsWith("/") ? srv.base : srv.base + "/") +
-        (step.request.uri.startsWith("/")
-          ? step.request.uri.substring(1)
-          : step.request.uri);
-      const query = step.request.query
-        ? "?" +
-          Object.entries(step.request.query)
-            .filter(([, v]) => typeof v !== "undefined")
-            .map(
-              ([k, v]) =>
-                encodeURIComponent(k) +
-                "=" +
-                (typeof v === "string"
-                  ? encodeURIComponent(v.includes("{{") ? evalTpl(v, ctx) : v)
-                  : v)
-            )
-            .join("&")
-        : "";
-      const url =
-        (rawUrl.includes("{{") ? evalTpl(rawUrl, ctx) : rawUrl) + query;
-
-      const method = step.request.method ?? "GET";
-      const headers = new Headers();
-      headers.set(
-        "Content-Type",
-        step.request.contentType ?? "application/json"
-      );
-      step.request.headers?.forEach((h) =>
-        headers.set(evalTpl(h.name, ctx), evalTpl(h.value, ctx))
-      );
-
-      if (step.request.session) {
-        setRequestSession(srv, sessions, step, headers);
-      }
-
-      const body = getBody(step, ctx, vars);
-
-      logger.info(`${stepPrefix} → ${method} ${url}`, {
-        headers: [...headers.entries()],
-        body,
-      });
-
-      /* ---------- send request ------------------------------------- */
-      let res = await makeRequest(step, url, headers, method, body);
-
-      logger.info(`${stepPrefix} ← ${res.status} ${method} ${url}`, res);
-
-      /* ---------- capture session ---------------------------------- */
-      if (step.response?.session) {
-        assignResponseSession(srv, step, res, sessions, logger, stepPrefix);
-      }
-
-      /* ---------- capture vars ------------------------------------- */
-      if (step.response?.capture) {
-        for (const [v, src] of Object.entries(step.response.capture)) {
-          const val = extract(v, src, res.body, res.headers, vars);
-          vars[v] = val;
-          logger.trace(`${stepPrefix} captured var ${v}`, val);
+        if (step.request.session) {
+          setRequestSession(srv, sessions, step, headers);
         }
+
+        const body = getBody(step, ctx, vars);
+
+        logger.info(`${stepPrefix} → ${method} ${url}`, {
+          headers: [...headers.entries()],
+          body,
+        });
+
+        /* ---------- send request ------------------------------------- */
+        res = await makeRequest(step, url, headers, method, body);
+
+        logger.info(`${stepPrefix} ← ${res.status} ${method} ${url}`, res);
+
+        /* ---------- capture session ---------------------------------- */
+        if (step.response?.session) {
+          assignResponseSession(srv, step, res, sessions, logger, stepPrefix);
+        }
+
+        /* ---------- capture vars ------------------------------------- */
+        if (step.response?.capture) {
+          for (const [v, src] of Object.entries(step.response.capture)) {
+            const val = extract(v, src, res.body, res.headers, vars);
+            vars[v] = val;
+            logger.trace(`${stepPrefix} captured var ${v}`, val);
+          }
+        }
+
+        /* ---------- set headers ------------------------------------- */
+        hdrMap = {};
+        res.headers.forEach(({ name, value }) => {
+          hdrMap![headerName(name)] = value;
+        });
       }
 
       /* ---------- set handlebars context ---------------------------- */
-      const hdrMap: Record<string, string> = {};
-      res.headers.forEach(({ name, value }) => {
-        hdrMap[headerName(name)] = value;
-      });
       const cx: Record<string, unknown> = {
         ...ctx,
         ...vars,
         ...sessions,
-        body: res.body,
+        body: res && res.body ? res.body : undefined,
         header: hdrMap,
       };
 
@@ -246,21 +231,23 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       );
 
       /* ---------- validation: status check first ------------------- */
-      let statusPass;
-      const expectedStatus = step.response?.status ?? null;
-      if (expectedStatus) {
-        statusPass = res.status === expectedStatus;
-      } else {
-        const expectedClass = step.response?.statusClass ?? `2xx`;
-        statusPass = `${Math.floor(res.status / 100)}xx` === expectedClass;
-      }
+      if (res) {
+        let statusPass;
+        const expectedStatus = step.response?.status ?? null;
+        if (expectedStatus) {
+          statusPass = res.status === expectedStatus;
+        } else {
+          const expectedClass = step.response?.statusClass ?? `2xx`;
+          statusPass = `${Math.floor(res.status / 100)}xx` === expectedClass;
+        }
 
-      overall &&= statusPass;
-      checkDetails.push({
-        name: "status",
-        check: `status ${res.status}`,
-        result: statusPass,
-      });
+        overall &&= statusPass;
+        checkDetails.push({
+          name: "status",
+          check: `status ${res.status}`,
+          result: statusPass,
+        });
+      }
 
       /* ---------- validation: custom checks ------------------------ */
       step.response?.validate?.forEach((validation) =>
@@ -317,9 +304,9 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
 
       /* ---------- assemble step result ----------------------------- */
       stepResults.push({
-        status: res.status,
-        headers: res.headers,
-        body: res.body,
+        status: res ? res.status : undefined,
+        headers: res ? res.headers : undefined,
+        body: res ? res.body : undefined,
         validation,
         vars: { ...vars },
         sessions: { ...sessions },

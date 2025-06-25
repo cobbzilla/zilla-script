@@ -29,7 +29,11 @@ export type ZillaScriptResponseHandlerFunc = (
   args: Record<string, unknown>,
   vars: ZillaScriptVars,
   step: ZillaScriptStep
-) => ZillaRawResponse | Promise<ZillaRawResponse>;
+) =>
+  | ZillaRawResponse
+  | undefined
+  | Promise<ZillaRawResponse>
+  | Promise<undefined>;
 
 export type ZillaHandlerArgType =
   | "string"
@@ -223,9 +227,9 @@ export type ZillaResponseValidationResult = {
 
 export type ZillaStepResult = {
   step?: string; // if this was done in a loop or include, this is the name of the loop/include step
-  status: number;
-  headers: ZillaScriptHeader[];
-  body: object | string | number | boolean;
+  status?: number;
+  headers?: ZillaScriptHeader[];
+  body?: object | string | number | boolean;
   validation: ZillaResponseValidationResult;
   vars: ZillaScriptVars; // current values for all vars
   sessions: Record<string, string>; // current session tokens for all sessions

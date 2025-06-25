@@ -18,13 +18,20 @@ import {
 
 let init: ZillaScriptInit;
 
-const verifySingleStepOk = async (script: ZillaScript) => {
+const verifyAllStepsOK = async (
+  script: ZillaScript,
+  expectedLength?: number
+) => {
+  expectedLength ||= 1;
   const result = await runZillaScript(script);
-  expect(result.stepResults).to.have.lengthOf(1);
-  const step = result.stepResults[0];
-  expect(step.status).to.equal(200);
-  expect(step.validation.result).to.be.true;
-  return step;
+  expect(result.stepResults).to.have.lengthOf(expectedLength);
+  result.stepResults.forEach((step) => {
+    if (step.status) {
+      expect(step.status).to.equal(200);
+    }
+    expect(step.validation.result).to.be.true;
+  });
+  return result;
 };
 
 describe("ZillaScript engine", function () {
@@ -95,8 +102,11 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    const step = await verifySingleStepOk(script);
-    expect(step.body).to.deep.equal({ ok: true, echoed: { foo: "bar" } });
+    const result = await verifyAllStepsOK(script);
+    expect(result.stepResults[0].body).to.deep.equal({
+      ok: true,
+      echoed: { foo: "bar" },
+    });
   });
 
   it("captures a value from an array element", async () => {
@@ -128,7 +138,7 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    await verifySingleStepOk(script);
+    await verifyAllStepsOK(script);
   });
 
   it("sends a query properly", async () => {
@@ -152,7 +162,7 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    await verifySingleStepOk(script);
+    await verifyAllStepsOK(script);
   });
 
   it("creates two independent sessions and manipulates data", async () => {
@@ -170,7 +180,7 @@ describe("ZillaScript engine", function () {
           add_42_to_number: {
             args: { addend: { required: true, type: "number" } },
             func: (
-              raw: ZillaRawResponse,
+              raw: ZillaRawResponse | undefined,
               args: Record<string, unknown>,
               vars: ZillaScriptVars
             ) => {
@@ -184,7 +194,7 @@ describe("ZillaScript engine", function () {
               opaque_arg: { required: true, opaque: true },
             },
             func: (
-              raw: ZillaRawResponse,
+              raw: ZillaRawResponse | undefined,
               args: Record<string, unknown>,
               vars: ZillaScriptVars
             ) => {
@@ -327,12 +337,7 @@ describe("ZillaScript engine", function () {
       ],
     };
 
-    const result: ZillaScriptResult = await runZillaScript(script, {
-      continueOnError: false,
-    } as ZillaScriptOptions);
-
-    /* verify all steps ran */
-    expect(result.stepResults).to.have.lengthOf(5);
+    const result: ZillaScriptResult = await verifyAllStepsOK(script, 5);
 
     /* final step (session-two retrieval) should have empty object body */
     const last = result.stepResults[4];
@@ -387,14 +392,7 @@ describe("ZillaScript engine", function () {
       ],
     };
 
-    const result = await runZillaScript(script);
-    expect(result.stepResults).to.have.lengthOf(2);
-    const step0 = result.stepResults[0];
-    expect(step0.status).to.equal(200);
-    expect(step0.validation.result).to.be.true;
-    const step1 = result.stepResults[1];
-    expect(step1.status).to.equal(200);
-    expect(step1.validation.result).to.be.true;
+    await verifyAllStepsOK(script, 2);
   });
 
   it("runs several requests in a loop", async () => {
@@ -428,15 +426,10 @@ describe("ZillaScript engine", function () {
       ],
     };
 
-    const result = await runZillaScript(script);
-    expect(result.stepResults).to.have.lengthOf(3);
+    const result = await verifyAllStepsOK(script, 4);
     const step0 = result.stepResults[0];
-    expect(step0.status).to.equal(200);
-    expect(step0.validation.result).to.be.true;
     expect((step0.body as any).echoed.foo).to.be.eq("bar-one");
     const step1 = result.stepResults[1];
-    expect(step1.status).to.equal(200);
-    expect(step1.validation.result).to.be.true;
     expect((step1.body as any).echoed.foo).to.be.eq("bar-two");
   });
 
@@ -499,8 +492,8 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    const step = await verifySingleStepOk(script);
-    expect((step.body as any).echoed.foo).to.be.eq("foobar");
+    const result = await verifyAllStepsOK(script, 2);
+    expect((result.stepResults[0].body as any).echoed.foo).to.be.eq("foobar");
   });
 
   it("downloads a binary file", async () => {
@@ -526,7 +519,7 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    await verifySingleStepOk(script);
+    await verifyAllStepsOK(script);
   });
 
   it("sends a variable as a request body", async () => {
@@ -556,6 +549,6 @@ describe("ZillaScript engine", function () {
         },
       ],
     };
-    await verifySingleStepOk(script);
+    await verifyAllStepsOK(script);
   });
 });
