@@ -1,4 +1,4 @@
-import { GenericLogger } from "zilla-util";
+import { delay, GenericLogger } from "zilla-util";
 import { evalArgWithType } from "./helpers.js";
 import {
   ZillaRawResponse,
@@ -6,7 +6,6 @@ import {
   ZillaScriptStep,
 } from "./types.js";
 import { ZillaScriptProcessedRequest } from "./stepUtil.js";
-import { delay } from "./util.js";
 
 export const runStepHandlers = async <T>(
   step: ZillaScriptStep & {

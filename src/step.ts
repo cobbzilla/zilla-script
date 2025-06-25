@@ -1,11 +1,12 @@
 import Handlebars from "handlebars";
+import { delay } from "zilla-util";
 import {
   ZillaRawResponse,
   ZillaResponseValidationResult,
   ZillaStepResult,
 } from "./types.js";
 import { Ctx, evalTpl } from "./helpers.js";
-import { delay, headerName } from "./util.js";
+import { headerName } from "./util.js";
 import { extract } from "./extract.js";
 import {
   assignResponseSession,

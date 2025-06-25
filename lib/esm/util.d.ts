@@ -7,4 +7,3 @@ export declare const toHeaderArray: (h: Headers) => ZillaRawResponseHeaderArray;
 export declare const parseResponse: (res: Response) => Promise<ZillaRawResponse>;
 export declare const parseAxiosResponse: <T = unknown>(res: AxiosResponse<T>) => Promise<ZillaRawResponse>;
 export declare const toAxiosHeaders: (h: Headers, formHeaders: FormData.Headers, omit: string[]) => AxiosRequestHeaders;
-export declare const delay: (duration?: number | string) => Promise<void>;
