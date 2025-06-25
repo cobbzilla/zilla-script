@@ -304,7 +304,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       };
 
       if (!overall) {
-        const msg = `validation failed in step ${stepName}: ${JSON.stringify(
+        const msg = `validation failed in step '${stepName}': ${JSON.stringify(
           checkDetails,
           null,
           2
