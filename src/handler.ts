@@ -22,16 +22,19 @@ export const runStepHandlers = async <T>(
   if (step.handlers) {
     for (const stepHandler of step.handlers) {
       const hName = stepHandler.handler;
+      const hDesc = `${hName}${
+        stepHandler.comment ? `( ${stepHandler.comment})` : ""
+      }`;
       if (stepHandler.delay) {
         logger.info(
-          `${stepPrefix} waiting for delay=${stepHandler.delay} before starting handler=${hName}`
+          `${stepPrefix} waiting for delay=${stepHandler.delay} before starting ${hDesc}`
         );
         await delay(stepHandler.delay);
       }
       const stepHandlerParams = stepHandler.params ?? {};
       const initHandler = handlers[hName];
       if (!initHandler) {
-        logger.error(`${stepPrefix} handler not found: ${hName}`);
+        logger.error(`${stepPrefix} handler not found: ${hDesc}`);
       }
       if (initHandler.args) {
         for (const [field, config] of Object.entries(initHandler.args)) {
@@ -55,12 +58,17 @@ export const runStepHandlers = async <T>(
                 value,
                 cx,
                 initHandler.args ? initHandler.args[param].type : undefined,
-                `${stepPrefix} handler=${hName} wrong type for arg=${param}`
+                `${stepPrefix} handler=${hDesc} wrong type for arg=${param}`
               ),
         ])
       );
       const varsForHandler = { ...vars, ...sessions };
       const origKeys = Object.keys(varsForHandler);
+      logger.info(
+        `${stepPrefix} invoking handler=${hDesc} with args=${JSON.stringify(
+          args
+        )}`
+      );
       res = await initHandler.func(res, args, varsForHandler, step);
       for (const [k, v] of Object.entries(varsForHandler)) {
         if (!origKeys.includes(k)) {
