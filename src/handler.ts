@@ -52,12 +52,16 @@ export const runStepHandlers = async <T>(
       const args = Object.fromEntries(
         Object.entries(stepHandlerParams).map(([param, value]) => [
           param,
-          initHandler.args && initHandler.args[param].opaque
+          initHandler.args &&
+          initHandler.args[param] &&
+          initHandler.args[param].opaque
             ? value
             : evalArgWithType(
                 value,
                 cx,
-                initHandler.args ? initHandler.args[param].type : undefined,
+                initHandler.args && initHandler.args[param]
+                  ? initHandler.args[param].type
+                  : undefined,
                 `${stepPrefix} handler=${hDesc} wrong type for arg=${param}`
               ),
         ])
