@@ -17,7 +17,7 @@ import {
 import { upload } from "./upload.js";
 import { parseAxiosResponse, parseResponse } from "./util.js";
 import { extract } from "./extract.js";
-import { Ctx, walk } from "./helpers.js";
+import { Ctx, evalTpl, walk } from "./helpers.js";
 
 export type ZillaScriptProcessedRequest = ZillaScriptRequest & {
   uri: string;
@@ -131,9 +131,12 @@ export const editVars = (
     if (typeof vars[varName] === "undefined") {
       // throw new Error(`step=${step.step} var=${varName} is undefined`);
     }
-    if (
+    if (typeof val === "string") {
+      vars[varName] = val.startsWith("{{") ? evalTpl(val, vars) : val;
+    } else if (typeof val === "object") {
+      vars[varName] = Object.assign({}, vars[varName] || {}, walk(val, vars));
+    } else if (
       typeof val === "number" ||
-      typeof val === "string" ||
       typeof val === "boolean" ||
       val == null
     ) {

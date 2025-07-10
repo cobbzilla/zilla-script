@@ -243,10 +243,11 @@ describe("ZillaScript engine", function () {
             testVar2: 123,
             testVar3: { foo: "bar", baz: "quux" },
             testVar4: "{{testVar1}}def",
+            testVar5: { a: 1, b: 2, c: 3 },
           },
           // edit testVar3
           edits: {
-            testVar3: { baz: "snarf", fish: 42 },
+            testVar3: { baz: "snarf", fish: 42, nest: "{{testVar5}}" },
           },
           request: {
             get: "session",
@@ -266,6 +267,9 @@ describe("ZillaScript engine", function () {
                   "compare testVar3.foo '==' 'bar'",
                   "compare testVar3.baz '==' 'snarf'", // edited, not quux!
                   "compare testVar3.fish '==' 42", // edited, added
+                  "compare testVar3.nest.a '==' 1", // edited, added nested object
+                  "compare testVar3.nest.b '==' 2", // edited, added nested object
+                  "compare testVar3.nest.c '==' 3", // edited, added nested object
                   "compare testVar4 '==' 'abcdef'",
                   // test comparison operators
                   "eq testVar3.fish 42",
