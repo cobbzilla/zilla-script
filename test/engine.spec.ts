@@ -231,7 +231,12 @@ describe("ZillaScript engine", function () {
           request: {
             post: "session",
             session: "session-one",
-            body: { a: "1", b: "2", c: "3" },
+            body: {
+              a: "1",
+              b: "2",
+              c: "3",
+              jsonAsString: '{ "json": 1, "as-a-string": "w00t" }',
+            },
           },
           response: { status: 200 },
         },
@@ -255,6 +260,9 @@ describe("ZillaScript engine", function () {
           },
           response: {
             status: 200,
+            capture: {
+              parsed: { body: "jsonAsString", parse: true },
+            },
             validate: [
               {
                 id: "dataCheck",
@@ -262,6 +270,8 @@ describe("ZillaScript engine", function () {
                   "compare body.a '==' '1'",
                   "compare body.b '==' '2'",
                   "compare body.c '==' '3'",
+                  "compare parsed.json '==' 1",
+                  "compare parsed.as-a-string '==' 'w00t'",
                   "compare testVar1 '==' 'abc'",
                   "compare testVar2 '==' 123",
                   "compare testVar3.foo '==' 'bar'",

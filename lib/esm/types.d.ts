@@ -84,6 +84,7 @@ export type ZillaCaptureSource = {
     cookie?: {
         name: string;
     };
+    parse?: boolean;
 };
 export type ZillaCaptureSession = {
     name: string;

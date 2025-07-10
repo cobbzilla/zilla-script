@@ -3,7 +3,7 @@ import { JSONPath } from "jsonpath-plus";
 import { ZillaCaptureVarSource, ZillaRawResponseHeaderArray } from "./types.js";
 import { firstHeader } from "./util.js";
 
-export const extract = (
+const _extract = (
   varName: string,
   src: ZillaCaptureVarSource,
   body: object | string,
@@ -54,4 +54,17 @@ export const extract = (
   }
 
   throw new Error(`extract: var=${varName} error=invalid_capture_source`);
+};
+
+export const extract = (
+  varName: string,
+  src: ZillaCaptureVarSource,
+  body: object | string,
+  hdrs: ZillaRawResponseHeaderArray,
+  vars: Record<string, unknown | null>
+): unknown => {
+  const extracted = _extract(varName, src, body, hdrs, vars);
+  return typeof extracted === "string" && src.parse
+    ? JSON.parse(extracted)
+    : extracted;
 };
