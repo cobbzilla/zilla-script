@@ -128,7 +128,7 @@ export type ZillaCaptureSource = {
     // name of cookie to grab value from
     name: string;
   };
-  parse?: boolean;
+  parse?: boolean | number;
 };
 
 export type ZillaCaptureSession = {

@@ -235,7 +235,7 @@ describe("ZillaScript engine", function () {
               a: "1",
               b: "2",
               c: "3",
-              jsonAsString: '{ "json": 1, "as-a-string": "w00t" }',
+              jsonAsString: '"{\\"json\\":1,\\"as-a-string\\":\\"w00t\\"}"',
             },
           },
           response: { status: 200 },
@@ -261,7 +261,7 @@ describe("ZillaScript engine", function () {
           response: {
             status: 200,
             capture: {
-              parsed: { body: "jsonAsString", parse: true },
+              parsed: { body: "jsonAsString", parse: 2 },
             },
             validate: [
               {

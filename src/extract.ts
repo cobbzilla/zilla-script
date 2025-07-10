@@ -64,7 +64,14 @@ export const extract = (
   vars: Record<string, unknown | null>
 ): unknown => {
   const extracted = _extract(varName, src, body, hdrs, vars);
-  return typeof extracted === "string" && src.parse
-    ? JSON.parse(extracted)
-    : extracted;
+  if (typeof extracted === "string" && src.parse) {
+    let parsed = JSON.parse(extracted);
+    if (typeof src.parse === "number") {
+      for (let i = 0; i < src.parse - 1; i++) {
+        parsed = JSON.parse(parsed);
+      }
+    }
+    return parsed;
+  }
+  return extracted;
 };
