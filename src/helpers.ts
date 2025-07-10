@@ -102,7 +102,12 @@ operatorHelpers.forEach(([name, op]: [string, string]): void =>
 );
 
 Handlebars.registerHelper("length", (l: unknown, op: string, r: unknown) => {
-  const len = typeof l === "string" || Array.isArray(l) ? l.length : -1;
+  const len =
+    typeof l === "string" || Array.isArray(l)
+      ? l.length
+      : typeof l === "object" && l !== null
+      ? Object.keys(l).length
+      : -1;
   if (len === -1) {
     throw new Error(`cannot get length for type ${typeof l}`);
   }
