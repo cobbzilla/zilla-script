@@ -1,6 +1,6 @@
 {
   "name": "zilla-script",
-  "version": "1.0.44",
+  "version": "1.0.46",
   "type": "module",
   "description": "Simple testing framework for REST API testing",
   "keywords": [
@@ -62,7 +62,7 @@
     "tslint-config-prettier": "^1.18.0",
     "tsx": "^4.15.4",
     "typescript": "^5.7.3",
-    "zilla-util": "^1.2.18"
+    "zilla-util": "^1.2.19"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

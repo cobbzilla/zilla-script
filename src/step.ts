@@ -1,5 +1,5 @@
 import Handlebars from "handlebars";
-import { delay } from "zilla-util";
+import { delay, nowAsYYYYMMDDHHmmSS, uuidv4 } from "zilla-util";
 import {
   ZillaRawResponse,
   ZillaResponseValidationResult,
@@ -22,6 +22,22 @@ import {
   ZillaScriptStepOptions,
 } from "./stepUtil.js";
 import { runStepHandlers } from "./handler.js";
+import { writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+
+const DUMP_TEXT_LIMIT = 1000;
+
+const dumpContext = (cx: Record<string, unknown>, spacing?: number) => {
+  const dump = JSON.stringify(cx, null, spacing);
+  if (dump.length > DUMP_TEXT_LIMIT) {
+    const uniq = `${nowAsYYYYMMDDHHmmSS()}-${uuidv4(true)}`;
+    const file: string = `${tmpdir()}/zilla-context-dump-${uniq}.json`;
+    writeFileSync(file, JSON.stringify(cx, null, 2), "utf8");
+    return file;
+  } else {
+    return dump;
+  }
+};
 
 export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
   const {
@@ -259,7 +275,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
             const pass = rendered.trim().toLowerCase() === "true";
             if (!pass) {
               logger.warn(
-                `${stepPrefix} FAILED expr=${expr} cx=${JSON.stringify(cx)}`
+                `${stepPrefix} FAILED expr=${expr} cx=${dumpContext(cx)}`
               );
             }
             overall &&= pass;
@@ -296,7 +312,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           null,
           2
         )}\n
-        cx=${JSON.stringify(cx, null, 2)}`;
+        cx=${dumpContext(cx, 2)}`;
         if (!scriptOpts.continueOnInvalid) throw new Error(msg);
       }
 
