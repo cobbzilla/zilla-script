@@ -66,7 +66,7 @@ export const runStepHandlers = async <T>(
               ),
         ])
       );
-      const varsForHandler = { ...vars, ...sessions };
+      const varsForHandler = { ...vars, ...sessions, res, body: res?.body };
       const origKeys = Object.keys(varsForHandler);
       logger.info(
         `${stepPrefix} invoking handler=${hDesc} with args=${JSON.stringify(
