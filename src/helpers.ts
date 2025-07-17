@@ -17,7 +17,13 @@ Handlebars.registerHelper("compare", (l: unknown, op: string, r: unknown) => {
   if (op === "==" || op === "!=") return op === "==" ? l == r : l != r;
 
   /* the rest require strictly comparable operands */
-  if (!isComparable(l)) {
+  if (op === "includes" || op === "notIncludes") {
+    if (!Array.isArray(l) && typeof l !== "string" && typeof l !== "object") {
+      throw new Error(
+        `operator ${op} requires string | array | object operands: invalid left operand: ${l}`
+      );
+    }
+  } else if (!isComparable(l)) {
     throw new Error(
       `operator ${op} requires string | number operands: invalid left operand: ${l}`
     );
