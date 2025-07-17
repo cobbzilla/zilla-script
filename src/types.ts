@@ -229,7 +229,8 @@ export type ZillaResponseValidationResult = {
 };
 
 export type ZillaStepResult = {
-  step?: string; // if this was done in a loop or include, this is the name of the loop/include step
+  step: ZillaScriptStep;
+  stack: ZillaScriptStep[];
   status?: number;
   headers?: ZillaScriptHeader[];
   body?: object | string | number | boolean;

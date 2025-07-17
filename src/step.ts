@@ -49,6 +49,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
     sessions,
     handlers,
     scriptOpts,
+    stack,
   } = opts;
   const steps: ZillaScriptProcessedStep[] = opts.steps.map((step) =>
     processStep(step, handlers)
@@ -129,8 +130,10 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           ...opts,
           steps: include.steps,
         };
+        stack.push(step);
         const results = await runScriptSteps(includeScriptOpts);
-        stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
+        stepResults.push(...results.map((r) => ({ ...r, step })));
+        stack.pop();
       } else if (step.loop) {
         const subScriptSteps = await loadSubScriptSteps(step.loop);
         const items = Array.isArray(step.loop.items)
@@ -139,6 +142,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         if (!Array.isArray(items)) {
           throw new Error(`step=${stepName} loop.items is not an array`);
         }
+        stack.push(step);
         for (let i = step.loop.start ?? 0; i < items.length; ++i) {
           const item = items[i];
           const loopVars = { ...vars, [step.loop.varName]: item };
@@ -151,8 +155,9 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
             steps: subScriptSteps,
           };
           const results = await runScriptSteps(subScriptOpts);
-          stepResults.push(...results.map((r) => ({ ...r, step: stepName })));
+          stepResults.push(...results.map((r) => ({ ...r, step })));
         }
+        stack.pop();
       } else {
         const rawUrl =
           (srv.base.endsWith("/") ? srv.base : srv.base + "/") +
@@ -318,6 +323,8 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
 
       /* ---------- assemble step result ----------------------------- */
       stepResults.push({
+        step,
+        stack: [...stack],
         status: res ? res.status : undefined,
         headers: res ? res.headers : undefined,
         body: res ? res.body : undefined,
@@ -342,6 +349,8 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       });
 
       stepResults.push({
+        step,
+        stack: [...stack],
         status: 0,
         headers: [],
         body: "",

@@ -31,6 +31,7 @@ export type ZillaScriptStepOptions = {
   logger: GenericLogger;
   env?: Record<string, string>;
   steps: ZillaScriptStep[];
+  stack: ZillaScriptStep[];
   servers: {
     server?: string;
     base: string;

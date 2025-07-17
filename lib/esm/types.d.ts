@@ -170,7 +170,8 @@ export type ZillaResponseValidationResult = {
     }[];
 };
 export type ZillaStepResult = {
-    step?: string;
+    step: ZillaScriptStep;
+    stack: ZillaScriptStep[];
     status?: number;
     headers?: ZillaScriptHeader[];
     body?: object | string | number | boolean;

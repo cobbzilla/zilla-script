@@ -4,6 +4,7 @@ import {
   ZillaScriptOptions,
   ZillaScriptResponseHandler,
   ZillaScriptResult,
+  ZillaScriptStep,
   ZillaStepResult,
 } from "./types.js";
 import { evalTpl } from "./helpers.js";
@@ -41,6 +42,7 @@ export const runZillaScript = async (
   const defServer = servers[0].name;
 
   logger.info(`***** [SCRIPT ${script.script}] starting`);
+  const stack: ZillaScriptStep[] = [];
   const stepResults: ZillaStepResult[] = await runScriptSteps({
     logger,
     scriptOpts: opts,
@@ -51,6 +53,7 @@ export const runZillaScript = async (
     vars,
     sessions,
     handlers,
+    stack,
   });
   logger.info(`***** [SCRIPT ${script.script}] finished`);
   return { script, stepResults };
