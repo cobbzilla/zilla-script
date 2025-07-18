@@ -122,7 +122,10 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
               step.params &&
               typeof step.params[name] !== "undefined"
             ) {
-              vars[name] = step.params[name];
+              vars[name] =
+                typeof step.params[name] === "string"
+                  ? evalTpl(step.params[name], ctx)
+                  : step.params[name];
             }
           }
         }
