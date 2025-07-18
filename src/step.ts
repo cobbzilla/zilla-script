@@ -283,7 +283,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
             const pass = rendered.trim().toLowerCase() === "true";
             if (!pass) {
               logger.warn(
-                `${stepPrefix} FAILED expr=${expr} cx=${dumpContext(cx)}`
+                `${stepPrefix} FAILED expr=${expr} cx=\n${dumpContext(cx)}`
               );
             }
             overall &&= pass;
@@ -320,7 +320,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           null,
           2
         )}\n
-        cx=${dumpContext(cx, 2)}`;
+        cx=\n${dumpContext(cx, 2)}`;
         if (!scriptOpts.continueOnInvalid) throw new Error(msg);
       }
 
