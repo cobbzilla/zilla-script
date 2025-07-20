@@ -3,10 +3,10 @@ import { createServer } from "node:http";
 import { AddressInfo } from "node:net";
 import {
   runZillaScript,
+  StepContext,
   ZillaRawResponse,
   ZillaScript,
   ZillaScriptInit,
-  ZillaScriptOptions,
   ZillaScriptResult,
   ZillaScriptVars,
 } from "../src/index.js";
@@ -564,5 +564,38 @@ describe("ZillaScript engine", function () {
       ],
     };
     await verifyAllStepsOK(script);
+  });
+
+  it("calls a afterStep handler with new variable defined", async () => {
+    let callCount = 0;
+    let sawVar: string | undefined = undefined;
+    const newVarName = "NEW_VAR";
+    const script: ZillaScript = {
+      script: "afterScript",
+      init: {
+        ...init,
+        afterStep: (ctx: StepContext) => {
+          if (callCount === 0 && !sawVar && ctx.vars[newVarName]) {
+            sawVar = `${ctx.vars[newVarName]}`;
+          }
+          callCount++;
+        },
+      },
+      steps: [
+        {
+          step: "sends a dummy request",
+          request: {
+            post: "test",
+            body: { foo: "foo" },
+          },
+          response: {
+            capture: { [newVarName]: { body: "echoed.foo" } },
+          },
+        },
+      ],
+    };
+    await verifyAllStepsOK(script);
+    expect(callCount).to.be.eq(1);
+    expect(sawVar).to.be.eq("foo");
   });
 });
