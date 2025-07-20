@@ -1,5 +1,5 @@
 import { GenericLogger } from "zilla-util";
-import { ZillaRawResponse, ZillaRequestMethod, ZillaScript, ZillaScriptInitHandlers, ZillaScriptLoop, ZillaScriptOptions, ZillaScriptRequest, ZillaScriptSendSession, ZillaScriptServer, ZillaScriptStep, ZillaScriptVars } from "./types.js";
+import { StepContextFunc, ZillaRawResponse, ZillaRequestMethod, ZillaScript, ZillaScriptInitHandlers, ZillaScriptLoop, ZillaScriptOptions, ZillaScriptRequest, ZillaScriptSendSession, ZillaScriptServer, ZillaScriptStep, ZillaScriptVars } from "./types.js";
 import { Ctx } from "./helpers.js";
 export type ZillaScriptProcessedRequest = ZillaScriptRequest & {
     uri: string;
@@ -23,6 +23,8 @@ export type ZillaScriptStepOptions = {
     sessions: Record<string, string>;
     handlers: ZillaScriptInitHandlers;
     scriptOpts: ZillaScriptOptions;
+    beforeStep?: StepContextFunc;
+    afterStep?: StepContextFunc;
 };
 export declare const processStep: (step: ZillaScriptStep, handlers: ZillaScriptInitHandlers) => ZillaScriptProcessedStep;
 export declare const resolveServer: (servers: {

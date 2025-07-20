@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { AxiosResponse } from "axios";
 import { GenericLogger, isEmpty } from "zilla-util";
 import {
+  StepContextFunc,
   ZillaRawResponse,
   ZillaRequestMethod,
   ZillaScript,
@@ -43,6 +44,8 @@ export type ZillaScriptStepOptions = {
   sessions: Record<string, string>;
   handlers: ZillaScriptInitHandlers;
   scriptOpts: ZillaScriptOptions;
+  beforeStep?: StepContextFunc;
+  afterStep?: StepContextFunc;
 };
 
 export const processStep = (

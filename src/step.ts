@@ -50,6 +50,8 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
     handlers,
     scriptOpts,
     stack,
+    beforeStep,
+    afterStep,
   } = opts;
   const steps: ZillaScriptProcessedStep[] = opts.steps.map((step) =>
     processStep(step, handlers)
@@ -57,6 +59,9 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
   let stepPrefix = "";
   const stepResults: ZillaStepResult[] = [];
   for (const step of steps) {
+    if (beforeStep) {
+      beforeStep({ step, stack, vars, sessions });
+    }
     const stepName = step.step
       ? evalTpl(step.step, { ...vars, env })
       : "(unnamed)";
@@ -367,6 +372,9 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       });
     } finally {
       logger.info(`${stepPrefix} finished`);
+      if (afterStep) {
+        afterStep({ step, stack, vars, sessions });
+      }
     }
   }
   return stepResults;

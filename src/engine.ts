@@ -54,6 +54,8 @@ export const runZillaScript = async (
     sessions,
     handlers,
     stack,
+    beforeStep: init.beforeStep,
+    afterStep: init.afterStep,
   });
   logger.info(`***** [SCRIPT ${script.script}] finished`);
   return { script, stepResults };

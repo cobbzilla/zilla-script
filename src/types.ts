@@ -62,12 +62,23 @@ export type ZillaScriptInitHandlers = Record<
   ZillaScriptResponseHandler
 >;
 
+export type StepContext = {
+  step: ZillaScriptStep;
+  stack: ZillaScriptStep[];
+  vars: ZillaScriptVars;
+  sessions: Record<string, string>;
+};
+
+export type StepContextFunc = (ctx: StepContext) => void;
+
 export type ZillaScriptInit = {
   servers?: ZillaScriptServer[];
   session?: ZillaScriptSendSession;
   sessions?: Record<string, string>; // existing sessions, name->token
   vars?: ZillaScriptVars; // predefined vars
   handlers?: ZillaScriptInitHandlers;
+  beforeStep?: StepContextFunc;
+  afterStep?: StepContextFunc;
 };
 
 export type ZillaScriptHeader = {
