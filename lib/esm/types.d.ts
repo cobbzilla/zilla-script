@@ -38,6 +38,8 @@ export type StepContext = {
     stack: ZillaScriptStep[];
     vars: ZillaScriptVars;
     sessions: Record<string, string>;
+    response?: ZillaRawResponse;
+    headers?: Record<string, string>;
 };
 export type StepContextFunc = (ctx: StepContext) => void;
 export type ZillaScriptInit = {

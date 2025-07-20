@@ -77,7 +77,8 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
     /* create containers so we can still inspect them if an early error aborts */
     const checkDetails: ZillaResponseValidationResult["details"] = [];
     let overall = true;
-
+    let res: ZillaRawResponse | undefined = undefined;
+    let hdrMap: Record<string, string> | undefined = undefined;
     try {
       /* ---------- server resolution -------------------------------- */
       const srv = resolveServer(servers, step, defServer, logger, stepPrefix);
@@ -100,9 +101,6 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
       if (step.edits) {
         editVars(step, vars);
       }
-
-      let res: ZillaRawResponse | undefined = undefined;
-      let hdrMap: Record<string, string> | undefined = undefined;
 
       if (step.include) {
         const include =
@@ -373,7 +371,14 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
     } finally {
       logger.info(`${stepPrefix} finished`);
       if (afterStep) {
-        afterStep({ step, stack, vars, sessions });
+        afterStep({
+          step,
+          stack,
+          vars,
+          sessions,
+          response: res,
+          headers: hdrMap,
+        });
       }
     }
   }
