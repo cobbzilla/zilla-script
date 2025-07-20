@@ -40,6 +40,7 @@ export type StepContext = {
     sessions: Record<string, string>;
     response?: ZillaRawResponse;
     headers?: Record<string, string>;
+    error?: Error;
 };
 export type StepContextFunc = (ctx: StepContext) => void;
 export type ZillaScriptInit = {

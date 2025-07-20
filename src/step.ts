@@ -79,6 +79,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
     let overall = true;
     let res: ZillaRawResponse | undefined = undefined;
     let hdrMap: Record<string, string> | undefined = undefined;
+    let error: Error | undefined = undefined;
     try {
       /* ---------- server resolution -------------------------------- */
       const srv = resolveServer(servers, step, defServer, logger, stepPrefix);
@@ -341,6 +342,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
 
       logger.info(`${stepPrefix} complete`);
     } catch (err) {
+      error = err as Error;
       logger.error(`${stepPrefix} ERROR: err=${err}`, err);
       if (!scriptOpts.continueOnError) {
         throw err as Error;
@@ -378,6 +380,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
           sessions,
           response: res,
           headers: hdrMap,
+          error,
         });
       }
     }
