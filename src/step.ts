@@ -341,7 +341,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
 
       logger.info(`${stepPrefix} complete`);
     } catch (err) {
-      logger.info(`${stepPrefix} ERROR`);
+      logger.error(`${stepPrefix} ERROR: err=${err}`, err);
       if (!scriptOpts.continueOnError) {
         throw err as Error;
       }
