@@ -173,7 +173,11 @@ export const setRequestSession = (
     );
   }
   let tok = sessions[step.request.session!];
-  if (!tok && sessions[step.request.session!].startsWith("{{")) {
+  if (
+    !tok &&
+    sessions[step.request.session!] &&
+    sessions[step.request.session!].startsWith("{{")
+  ) {
     tok = evalTpl(sessions[step.request.session!], vars);
   }
   if (tok) {
