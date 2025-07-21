@@ -199,7 +199,7 @@ export const runScriptSteps = async (opts: ZillaScriptStepOptions) => {
         );
 
         if (step.request.session) {
-          setRequestSession(srv, sessions, step, headers);
+          setRequestSession(srv, sessions, vars, step, headers);
         }
 
         const body = getBody(step, ctx, vars);

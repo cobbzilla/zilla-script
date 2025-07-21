@@ -159,6 +159,7 @@ export const setRequestSession = (
     name: string;
   },
   sessions: Record<string, string>,
+  vars: Record<string, unknown>,
   step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
   },
@@ -171,11 +172,20 @@ export const setRequestSession = (
       }`
     );
   }
-  const tok = sessions[step.request.session!];
+  let tok = sessions[step.request.session!];
+  if (!tok && sessions[step.request.session!].startsWith("{{")) {
+    tok = evalTpl(sessions[step.request.session!], vars);
+  }
   if (tok) {
     if (srv.session.cookie)
       headers.append("Cookie", `${srv.session.cookie}=${tok}`);
     if (srv.session.header) headers.set(srv.session.header, tok);
+  } else if (!isEmpty(step.request.session)) {
+    throw new Error(
+      `step=${step.step ?? "?no step name"} session='${
+        step.request.session
+      }' not found`
+    );
   }
 };
 

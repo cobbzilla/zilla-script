@@ -48,7 +48,7 @@ export declare const setRequestSession: (srv: {
     base: string;
     session?: ZillaScriptSendSession;
     name: string;
-}, sessions: Record<string, string>, step: ZillaScriptStep & {
+}, sessions: Record<string, string>, vars: Record<string, unknown>, step: ZillaScriptStep & {
     request: ZillaScriptProcessedRequest;
 }, headers: Headers) => void;
 export declare const getBody: (step: ZillaScriptStep & {
