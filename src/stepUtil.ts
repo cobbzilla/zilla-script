@@ -172,13 +172,17 @@ export const setRequestSession = (
       }`
     );
   }
-  let tok = sessions[step.request.session!];
-  if (
-    !tok &&
-    sessions[step.request.session!] &&
-    sessions[step.request.session!].startsWith("{{")
-  ) {
-    tok = evalTpl(sessions[step.request.session!], vars);
+  const sess = step.request.session!;
+  let tok = sessions[sess];
+  if (!tok && sessions[sess] && sessions[sess].startsWith("{{")) {
+    tok = evalTpl(sessions[sess], vars);
+  }
+  if (!tok && sess.startsWith("{{")) {
+    const ctx = { ...vars, ...sessions };
+    const realSess = evalTpl(sess, ctx);
+    if (realSess && sessions[realSess]) {
+      tok = sessions[realSess];
+    }
   }
   if (tok) {
     if (srv.session.cookie)

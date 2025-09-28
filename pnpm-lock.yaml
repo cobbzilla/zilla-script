@@ -82,8 +82,8 @@ importers:
         specifier: ^5.7.3
         version: 5.8.3
       zilla-util:
-        specifier: ^1.2.23
-        version: 1.2.23
+        specifier: ^1.2.24
+        version: 1.2.24
 
 packages:
 
@@ -1157,8 +1157,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zilla-util@1.2.23:
-    resolution: {integrity: sha512-6gFso195b1jPfFr2KzWtNk/BWXkyxivmm3IVdMX3gal2VxYnJ0+dE7+nYHHb2NVoMsue4B5WSHGfJq41MaBLTw==}
+  zilla-util@1.2.24:
+    resolution: {integrity: sha512-n29luad1D1c70GcbmZF4PQMfwZZf5uXLwY6XPfrLNMps4zDEuJHLKi5jvFvnW+8kpgf38GysM8GMXcvoUX/4EQ==}
 
 snapshots:
 
@@ -2189,6 +2189,6 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zilla-util@1.2.23:
+  zilla-util@1.2.24:
     dependencies:
       grapheme-splitter: 1.0.4

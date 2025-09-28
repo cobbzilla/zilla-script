@@ -244,6 +244,7 @@ describe("ZillaScript engine", function () {
         {
           step: "get-session-one",
           vars: {
+            sessionRef: "session-one",
             testVar1: "abc",
             testVar2: 123,
             testVar3: { foo: "bar", baz: "quux" },
@@ -256,7 +257,7 @@ describe("ZillaScript engine", function () {
           },
           request: {
             get: "session",
-            session: "session-one",
+            session: "{{sessionRef}}",
           },
           response: {
             status: 200,
