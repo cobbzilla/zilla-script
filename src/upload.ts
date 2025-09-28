@@ -46,7 +46,21 @@ export const upload = async (
   headers: Headers
 ): Promise<AxiosResponse> => {
   const formData = await formDataForFiles(step.request!.files!);
-  return await axios.post(url, formData, {
+  let meth;
+  switch (method) {
+    case "POST":
+      meth = axios.post;
+      break;
+    case "PUT":
+      meth = axios.put;
+      break;
+    case "PATCH":
+      meth = axios.patch;
+      break;
+    default:
+      throw new Error(`upload: unsupported method=${method}`);
+  }
+  return await meth(url, formData, {
     method,
     headers: toAxiosHeaders(headers, formData.getHeaders(), [
       "Content-Type",
