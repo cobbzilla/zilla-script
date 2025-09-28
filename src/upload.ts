@@ -2,7 +2,7 @@ import FormData from "form-data";
 import { Readable } from "stream";
 import axios, { AxiosResponse } from "axios";
 import { toAxiosHeaders } from "./util.js";
-import { ZillaScriptStep } from "./types.js";
+import { ZillaRequestMethod, ZillaScriptStep } from "./types.js";
 
 const bufferToStream = (
   buffer: Buffer,
@@ -42,11 +42,12 @@ export const formDataForFiles = async (
 export const upload = async (
   url: string,
   step: ZillaScriptStep,
+  method: ZillaRequestMethod,
   headers: Headers
 ): Promise<AxiosResponse> => {
   const formData = await formDataForFiles(step.request!.files!);
   return await axios.post(url, formData, {
-    method: step.request?.method || "POST",
+    method,
     headers: toAxiosHeaders(headers, formData.getHeaders(), [
       "Content-Type",
       "Content-Length",

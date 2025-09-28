@@ -227,7 +227,7 @@ export const makeRequest = async (
 ): Promise<ZillaRawResponse> => {
   const useAxios = step.request.files;
   const res = useAxios
-    ? await upload(url, step, headers)
+    ? await upload(url, step, method as ZillaRequestMethod, headers)
     : await fetch(url, { method, headers, body: body as BodyInit | undefined });
   return useAxios
     ? parseAxiosResponse(res as AxiosResponse)
