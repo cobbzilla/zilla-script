@@ -109,6 +109,45 @@ describe("ZillaScript engine", function () {
     });
   });
 
+  it("handles echos a variable in a key", async () => {
+    const script: ZillaScript = {
+      script: "post-echo",
+      init,
+      steps: [
+        {
+          step: "echo-var-in-key-step",
+          vars: { fooVar: "quux" },
+          request: {
+            post: "test",
+            body: { ["{{fooVar}}"]: "bar" },
+          },
+          response: {
+            status: 200,
+            capture: {
+              bar: { body: "echoed.quux" },
+              type: { header: { name: "Content-Type" } },
+            },
+            validate: [
+              {
+                id: "captured value of body.echoed.foo as variable named bar",
+                check: ["eq bar 'bar'"],
+              },
+              {
+                id: "captured content-type header into variable named type",
+                check: ["eq type 'application/json'"],
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const result = await verifyAllStepsOK(script);
+    expect(result.stepResults[0].body).to.deep.equal({
+      ok: true,
+      echoed: { quux: "bar" },
+    });
+  });
+
   it("captures a value from an array element", async () => {
     const script: ZillaScript = {
       script: "capture-array",

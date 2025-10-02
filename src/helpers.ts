@@ -157,7 +157,7 @@ export const walk = (v: unknown, ctx: Ctx): unknown => {
   if (v && typeof v === "object")
     return Object.fromEntries(
       Object.entries(v as Record<string, unknown>).map(([k, x]) => [
-        k,
+        walk(k, ctx),
         walk(x, ctx),
       ])
     );
