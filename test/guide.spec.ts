@@ -33,7 +33,7 @@ describe("GUIDE.md examples", function () {
 
   after(async () => {
     await new Promise<void>((resolve, reject) =>
-      server.close((err) => (err ? reject(err) : resolve()))
+      server.close((err) => (err ? reject(err) : resolve())),
     );
   });
 
@@ -790,13 +790,13 @@ describe("GUIDE.md examples", function () {
       expect(result.stepResults[1]!.validation.result).to.be.true;
       expect(result.stepResults[2]!.validation.result).to.be.true;
       expect((result.stepResults[0]!.body as any).echoed.name).to.equal(
-        "apple"
+        "apple",
       );
       expect((result.stepResults[1]!.body as any).echoed.name).to.equal(
-        "banana"
+        "banana",
       );
       expect((result.stepResults[2]!.body as any).echoed.name).to.equal(
-        "orange"
+        "orange",
       );
     });
 
@@ -909,10 +909,10 @@ describe("GUIDE.md examples", function () {
       expect(result.stepResults).to.have.lengthOf(2);
       expect(result.stepResults[0]!.validation.result).to.be.true;
       expect((result.stepResults[0]!.body as any).echoed.name).to.equal(
-        "Widget A"
+        "Widget A",
       );
       expect((result.stepResults[0]!.body as any).echoed.type).to.equal(
-        "widget"
+        "widget",
       );
       expect(result.stepResults[0]!.vars.entityId).to.equal("Widget A");
     });
@@ -963,13 +963,13 @@ describe("GUIDE.md examples", function () {
       expect(result.stepResults[2]!.validation.result).to.be.true;
       expect(result.stepResults[4]!.validation.result).to.be.true;
       expect((result.stepResults[0]!.body as any).echoed.name).to.equal(
-        "Widget A"
+        "Widget A",
       );
       expect((result.stepResults[2]!.body as any).echoed.name).to.equal(
-        "Gadget B"
+        "Gadget B",
       );
       expect((result.stepResults[4]!.body as any).echoed.name).to.equal(
-        "Gadget B"
+        "Gadget B",
       );
     });
 
@@ -1030,10 +1030,10 @@ describe("GUIDE.md examples", function () {
       // 1 include + 1 inner + 1 use-userId = 3 total
       expect(result.stepResults).to.have.lengthOf(3);
       expect(result.stepResults[1]!.vars.userId).to.equal(
-        "testuser@example.com"
+        "testuser@example.com",
       );
       expect(result.stepResults[2]!.vars.userId).to.equal(
-        "testuser@example.com"
+        "testuser@example.com",
       );
       expect(result.stepResults[2]!.validation.result).to.be.true;
     });

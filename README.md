@@ -3,11 +3,11 @@
 ## The Problem
 
 You're testing a REST API. You need to:
-1. Auth with email/SMS
-2. Create some resources
-3. Upload files
-4. Validate responses
-5. Chain requests using captured session tokens and IDs
+1. Make requests and validate things about the responses
+2. Create/read/update/delete some resources
+3. Authenticate, establish sessions, make requests from multiple sessions
+4. Chain requests using captured session tokens and IDs
+5. Upload files
 
 Your options:
 - **Postman collections**: Click-fest UI, version control nightmare, no real programming
@@ -87,6 +87,11 @@ export const AuthFlow: ZillaScript = {
 
 // Run it
 await runZillaScript(AuthFlow, { env: process.env });
+
+// Or, if you're using a test framework like mocha:
+describe("my API test", async () => {
+    it("hits some endpoint and we get what we expect", async () => runZillaScript(MyTest))
+})
 ```
 
 **Result**: Half the code, zero boilerplate, 100% intent.
@@ -137,9 +142,9 @@ request: {
 
 ```typescript
 validate: [
-  { id: "status is active", check: ["eq body.status 'active'"] },
-  { id: "created recently", check: ["gt body.createdAt 1704067200000"] },
-  { id: "has items", check: ["notEmpty body.items"] }
+    { id: "status is active", check: ["eq body.status 'active'"] },
+    { id: "created recently", check: [`gt body.createdAt ${Date.now() - 5000}`] },
+    { id: "has items", check: ["notEmpty body.items"] }
 ]
 ```
 
@@ -152,14 +157,22 @@ Break complex flows into reusable modules:
 ```typescript
 const SignUp: ZillaScript = {
   script: "sign-up",
-  steps: [/* ... signup steps ... */]
+  sets: {
+      vars: ["user"],
+      sessions: ["userSession"],
+  },
+  steps: [/* ... signup steps that establish userSession and set user var ... */]
 };
 
 const FullWorkflow: ZillaScript = {
   script: "full-workflow",
   steps: [
-    { step: "sign up user", include: SignUp, params: { email: "test@example.com" } },
-    { step: "do stuff", /* ... */ }
+    {
+        step: "sign up user",
+        include: SignUp,
+        params: { email: "test@example.com" }
+    },
+    { step: "do stuff", /* ... you can now send requests witht session: "userSession" and use the newly-defined 'user' variable */ }
   ]
 };
 ```

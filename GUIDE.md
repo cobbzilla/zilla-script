@@ -506,7 +506,7 @@ steps: [
     request: {
       server: "cdn",  // Explicitly use CDN server
       post: "uploads/avatar",
-      body: { /* ... */ }
+      files: { "some-filename.txt": "some raw data "/* raw string data, or a Buffer, or a Promise<string | Buffer> */ }
     }
   }
 ]
@@ -1541,12 +1541,14 @@ If any check fails, the step fails and reports which validation and which check 
 ### Example 5: File Upload Response
 
 ```typescript
+import { readFile } from "fs/promises";
+
 {
   step: "upload file",
   request: {
     post: "uploads",
     contentType: "multipart/form-data",
-    files: { file: "./test-data/image.png" }
+    files: { file: readFile("./test-data/image.png") } // file can be a string, Buffer or Promise<string | Buffer>
   },
   response: {
     capture: { uploadId: { body: "fileId" } },
@@ -2343,104 +2345,106 @@ await runZillaScript(SimpleTest, { env: process.env });
 ### Example 2: Multi-Server with Handlers
 
 ```typescript
+import { readFile } from 'fs/promises'
+
 const AdvancedTest: ZillaScript = {
-  script: "advanced-test",
-  init: {
-    servers: [
-      {
-        server: "api",
-        base: "http://{{env.API_HOST}}:{{env.API_PORT}}/api",
-        session: { header: "Authorization" }
-      },
-      {
-        server: "storage",
-        base: "http://{{env.STORAGE_HOST}}:{{env.STORAGE_PORT}}"
-      }
-    ],
-    sessions: {
-      admin: "{{env.ADMIN_TOKEN}}"
-    },
-    vars: {
-      testUser: null,
-      uploadedFileId: null
-    },
-    handlers: {
-      createTestUser: {
-        func: async (response, args, vars) => {
-          const user = await testHelpers.createRandomUser();
-          vars.testUser = user;
-          return response;
-        }
-      },
-      checkFileExists: {
-        args: {
-          fileId: { type: "string", required: true }
+    script: "advanced-test",
+    init: {
+        servers: [
+            {
+                server: "api",
+                base: "http://{{env.API_HOST}}:{{env.API_PORT}}/api",
+                session: { header: "Authorization" }
+            },
+            {
+                server: "storage",
+                base: "http://{{env.STORAGE_HOST}}:{{env.STORAGE_PORT}}"
+            }
+        ],
+        sessions: {
+            admin: "{{env.ADMIN_TOKEN}}"
         },
-        func: async (response, args) => {
-          const exists = await storage.fileExists(args.fileId);
-          if (!exists) throw new Error(`File ${args.fileId} not found`);
-          return response;
+        vars: {
+            testUser: null,
+            uploadedFileId: null
+        },
+        handlers: {
+            createTestUser: {
+                func: async (response, args, vars) => {
+                    const user = await testHelpers.createRandomUser();
+                    vars.testUser = user;
+                    return response;
+                }
+            },
+            checkFileExists: {
+                args: {
+                    fileId: { type: "string", required: true }
+                },
+                func: async (response, args) => {
+                    const exists = await storage.fileExists(args.fileId);
+                    if (!exists) throw new Error(`File ${args.fileId} not found`);
+                    return response;
+                }
+            }
         }
-      }
-    }
-  },
-  steps: [
-    {
-      step: "create test user",
-      handlers: [{ handler: "createTestUser" }]
     },
-    {
-      step: "login as test user",
-      request: {
-        post: "auth/login",
-        body: {
-          email: "{{testUser.email}}",
-          password: "{{testUser.password}}"
+    steps: [
+        {
+            step: "create test user",
+            handlers: [{ handler: "createTestUser" }]
+        },
+        {
+            step: "login as test user",
+            request: {
+                post: "auth/login",
+                body: {
+                    email: "{{testUser.email}}",
+                    password: "{{testUser.password}}"
+                }
+            },
+            response: {
+                session: { name: "testSession", from: { body: "token" } }
+            }
+        },
+        {
+            step: "upload file",
+            request: {
+                server: "storage",
+                session: "testSession",
+                post: "upload",
+                contentType: "multipart/form-data",
+                files: { file: readFile("./test-data/sample.pdf") } // file can be a string, Buffer or Promise<string | Buffer>
+            },
+            response: {
+                capture: { uploadedFileId: { body: "fileId" } }
+            }
+        },
+        {
+            step: "verify file exists in storage",
+            handlers: [{
+                handler: "checkFileExists",
+                params: { fileId: "{{uploadedFileId}}" }
+            }]
+        },
+        {
+            step: "admin: view uploaded files",
+            request: {
+                server: "api",
+                session: "admin",
+                get: "admin/files"
+            },
+            response: {
+                validate: [
+                    { id: "uploaded file in list", check: ["includes body.[*].id uploadedFileId"] }
+                ]
+            }
         }
-      },
-      response: {
-        session: { name: "testSession", from: { body: "token" } }
-      }
-    },
-    {
-      step: "upload file",
-      request: {
-        server: "storage",
-        session: "testSession",
-        post: "upload",
-        contentType: "multipart/form-data",
-        files: { file: "./test-data/sample.pdf" }
-      },
-      response: {
-        capture: { uploadedFileId: { body: "fileId" } }
-      }
-    },
-    {
-      step: "verify file exists in storage",
-      handlers: [{
-        handler: "checkFileExists",
-        params: { fileId: "{{uploadedFileId}}" }
-      }]
-    },
-    {
-      step: "admin: view uploaded files",
-      request: {
-        server: "api",
-        session: "admin",
-        get: "admin/files"
-      },
-      response: {
-        validate: [
-          { id: "uploaded file in list", check: ["includes body.[*].id uploadedFileId"] }
-        ]
-      }
-    }
-  ]
+    ]
 };
 
 await runZillaScript(AdvancedTest, {
-  env: process.env,
-  logger: testLogger
+    env: process.env,
+    logger: testLogger
 });
 ```
 
