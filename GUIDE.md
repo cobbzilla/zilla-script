@@ -145,7 +145,7 @@ const MyScript: ZillaScript = {
 - **`servers`**: **Required** - At least one server must be defined (either in script or runtime options)
 - `vars`: Optional - Variable declarations
 - `sessions`: Optional - Pre-existing session tokens
-- `handlers`: Optional - Custom handler functions
+- `handlers`: Optional - Declare custom handler functions
 
 **`steps`**: Array of test steps executed sequentially (required)
 

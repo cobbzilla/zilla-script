@@ -1,5 +1,48 @@
 # How to Write API Tests That Don't Suck
 
+## Introduction
+I tried everything it all sucks. None of the API testing frameworks did what I wanted in all cases.
+
+I need something that can run both in development environments and in CI.
+
+I need a test suite that's easily versioned and committed to source control.
+
+I need something that *just works*.
+
+I couldn't find anything that scratched my itches just right, so **zilla-script** is my answer to these questions.
+
+### Why Not Just Use [X]?
+
+**Postman/Insomnia**: Great for manual testing, terrible for CI/CD. Version control is painful, no programmatic control.
+
+**Supertest/Axios**: Imperative code. Every test becomes 50% boilerplate, 50% intent. State management is manual.
+
+**GraphQL/gRPC test tools**: Domain-specific. zilla-script works with any HTTP/REST API.
+
+**Cucumber/Gherkin**: Natural language is great for stakeholders, terrible for developers. BDD adds ceremony without adding value for API tests.
+
+**Raw test code**: Maximum flexibility, maximum pain. You end up reinventing zilla-script badly.
+
+### Philosophy
+
+1. **Tests are documentation**: Your test suite should read like API documentation
+2. **Declare intent, not implementation**: Describe what you're testing, not how to test it
+3. **State is explicit**: Variables and sessions are first-class concepts
+4. **Composition over inheritance**: Build complex tests from simple, reusable pieces
+5. **Escape hatches everywhere**: Custom handlers for when declarative isn't enough
+6. **Simplicity first**: Sensible defaults everywhere, facilitate minimalistic tests
+
+### Community
+
+- **GitHub**: [https://github.com/cobbzilla/zilla-script](https://github.com/cobbzilla/zilla-script)
+- **Report [Issues](https://github.com/cobbzilla/zilla-script/issues)**
+- **License**: [Apache License](LICENSE.txt)
+
+# zilla-script
+The rest of this README is a high-level overview of what zilla-script is trying to
+solve and how it does it. There is a [full guide document](GUIDE.md) that describes all the features
+of zilla-script in detail.
+
 ## The Problem
 
 You're testing a REST API. You need to:
@@ -456,50 +499,8 @@ response: {
     bodyVar: "user"  // Send entire modified user object
   }
 }
+
 ```
-
-## Why Not Just Use [X]?
-
-**Postman/Insomnia**: Great for manual testing, terrible for CI/CD. Version control is painful, no programmatic control.
-
-**Supertest/Axios**: Imperative code. Every test becomes 50% boilerplate, 50% intent. State management is manual.
-
-**GraphQL/gRPC test tools**: Domain-specific. zilla-script works with any HTTP/REST API.
-
-**Cucumber/Gherkin**: Natural language is great for stakeholders, terrible for developers. BDD adds ceremony without adding value for API tests.
-
-**Raw test code**: Maximum flexibility, maximum pain. You end up reinventing zilla-script badly.
-
-## Philosophy
-
-1. **Tests are documentation**: Your test suite should read like API documentation
-2. **Declare intent, not implementation**: Describe what you're testing, not how to test it
-3. **State is explicit**: Variables and sessions are first-class concepts
-4. **Composition over inheritance**: Build complex tests from simple, reusable pieces
-5. **Escape hatches everywhere**: Custom handlers for when declarative isn't enough
-
-## Real-World Stats
-
-Our production API test suite:
-- **15+ integration test files** covering auth, profiles, posts, moderation, payments
-- **600+ test steps** across all scenarios
-- **Average test**: 40 steps, 10-15 validations per test
-- **Boilerplate reduction**: ~70% less code vs imperative approach
-- **Maintenance time**: Down 60% (changes propagate via includes)
-
-The killer feature: **Junior devs can write these tests**. The declarative format makes it obvious what's happening. No more "what does this fetch chain do?"
-
-## Community
-
-- **License**: MIT
-- **Repo**: [Your repo here]
-- **Issues**: [Your issues here]
-- **Discussions**: [Your discussions here]
-
-## TL;DR
-
-Stop writing 200-line imperative API tests. Start writing 30-line declarative scripts that actually communicate intent.
-
 ```bash
 npm install zilla-script
 ```
