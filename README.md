@@ -20,7 +20,7 @@ There's a better way.
 
 **zilla-script** lets you write API tests as data structures. Your test describes *what* you want, not *how* to do it.
 
-### Before (Imperative)
+### Before (Imperative and Ugly)
 
 ```typescript
 it('should authenticate and fetch user data', async () => {
@@ -28,7 +28,7 @@ it('should authenticate and fetch user data', async () => {
   const authRes = await fetch('http://localhost:3030/api/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contactEmail: 'user@example.com' })
+    body: JSON.stringify({ email: 'user@example.com' })
   });
   expect(authRes.status).to.equal(200);
 
@@ -59,15 +59,16 @@ it('should authenticate and fetch user data', async () => {
 });
 ```
 
-### After (Declarative)
+### After (Declarative and Beautiful)
 
 ```typescript
 export const AuthFlow: ZillaScript = {
   script: "auth-flow",
+  init: { servers: [{ base: "http://localhost:3030/api/" }] },
   steps: [
     {
       step: "request auth code",
-      request: { post: "auth", body: { contactEmail: "user@example.com" } },
+      request: { post: "auth", body: { email: "user@example.com" } },
       handlers: [{ handler: "get_email_token", params: { tokenVar: "token" } }]
     },
     {
@@ -86,11 +87,11 @@ export const AuthFlow: ZillaScript = {
 };
 
 // Run it
-await runZillaScript(AuthFlow, { env: process.env });
+await runZillaScript(AuthFlow);
 
 // Or, if you're using a test framework like mocha:
 describe("my API test", async () => {
-    it("hits some endpoint and we get what we expect", async () => runZillaScript(MyTest))
+    it("hits some endpoint and we get what we expect", async () => runZillaScript(AuthFlow))
 })
 ```
 
