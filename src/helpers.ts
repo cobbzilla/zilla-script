@@ -150,12 +150,39 @@ export const walk = (v: unknown, ctx: Ctx): unknown => {
   if (typeof v === "string" && v.includes("{{")) {
     const s = v.trim();
     const evaluated = evalTpl(v, ctx);
-    return evaluated === "[object Object]" &&
+
+    // Special case: if the template is just {{varName}}, return the actual value
+    if (
       s.startsWith("{{") &&
       s.endsWith("}}") &&
-      ctx[s.substring(2, s.length - 2).trim()]
-      ? ctx[s.substring(2, s.length - 2).trim()]
-      : evaluated;
+      !s.includes(" ") // simple variable reference, no operators
+    ) {
+      const varName = s.substring(2, s.length - 2).trim();
+      const actualValue = ctx[varName];
+      if (actualValue !== undefined) {
+        return actualValue;
+      }
+    }
+
+    // If evaluated result looks like a number or boolean, try to parse it
+    if (evaluated.match(/^-?\d+$/)) {
+      return parseInt(evaluated);
+    }
+    if (evaluated.match(jsonNumberRegex)) {
+      return parseFloat(evaluated);
+    }
+    if (evaluated === "true") return true;
+    if (evaluated === "false") return false;
+
+    // Check if it's an object stringification
+    if (evaluated === "[object Object]" &&
+        s.startsWith("{{") &&
+        s.endsWith("}}") &&
+        ctx[s.substring(2, s.length - 2).trim()]) {
+      return ctx[s.substring(2, s.length - 2).trim()];
+    }
+
+    return evaluated;
   }
   if (Array.isArray(v)) return v.map((x) => walk(x, ctx));
   if (v && typeof v === "object")

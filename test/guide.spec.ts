@@ -69,7 +69,10 @@ describe("GUIDE.md examples", function () {
         steps: [
           {
             step: "test equality",
-            request: { post: "test", body: { status: "ok", id: 123, active: true } },
+            request: {
+              post: "test",
+              body: { status: "ok", id: 123, active: true },
+            },
             response: {
               validate: [
                 { id: "status is ok", check: ["eq body.echoed.status 'ok'"] },
@@ -105,7 +108,10 @@ describe("GUIDE.md examples", function () {
                 actualId: { body: "echoed.id" },
               },
               validate: [
-                { id: "status matches", check: ["eq actualStatus expectedStatus"] },
+                {
+                  id: "status matches",
+                  check: ["eq actualStatus expectedStatus"],
+                },
                 { id: "id matches", check: ["eq actualId expectedId"] },
               ],
             },
@@ -159,9 +165,18 @@ describe("GUIDE.md examples", function () {
             },
             response: {
               validate: [
-                { id: "email starts with admin", check: ["startsWith body.echoed.email 'admin'"] },
-                { id: "email ends with domain", check: ["endsWith body.echoed.email '@example.com'"] },
-                { id: "url starts with http", check: ["startsWith body.echoed.url 'http://'"] },
+                {
+                  id: "email starts with admin",
+                  check: ["startsWith body.echoed.email 'admin'"],
+                },
+                {
+                  id: "email ends with domain",
+                  check: ["endsWith body.echoed.email '@example.com'"],
+                },
+                {
+                  id: "url starts with http",
+                  check: ["startsWith body.echoed.url 'http://'"],
+                },
               ],
             },
           },
@@ -179,10 +194,16 @@ describe("GUIDE.md examples", function () {
         steps: [
           {
             step: "test includes",
-            request: { post: "test", body: { description: "urgent task", tags: ["urgent", "todo"] } },
+            request: {
+              post: "test",
+              body: { description: "urgent task", tags: ["urgent", "todo"] },
+            },
             response: {
               validate: [
-                { id: "description contains urgent", check: ["includes body.echoed.description 'urgent'"] },
+                {
+                  id: "description contains urgent",
+                  check: ["includes body.echoed.description 'urgent'"],
+                },
               ],
             },
           },
@@ -230,8 +251,14 @@ describe("GUIDE.md examples", function () {
             request: { post: "test", body: { count: 42 } },
             response: {
               validate: [
-                { id: "number equals number", check: ["eq body.echoed.count 42"] },
-                { id: "number equals string number", check: ["eq body.echoed.count '42'"] },
+                {
+                  id: "number equals number",
+                  check: ["eq body.echoed.count 42"],
+                },
+                {
+                  id: "number equals string number",
+                  check: ["eq body.echoed.count '42'"],
+                },
               ],
             },
           },
@@ -254,9 +281,18 @@ describe("GUIDE.md examples", function () {
             request: { post: "test", body: { items: ["a", "b", "c"] } },
             response: {
               validate: [
-                { id: "exactly 3 items", check: ["length body.echoed.items '==' 3"] },
-                { id: "at least 1 item", check: ["length body.echoed.items '>=' 1"] },
-                { id: "less than 10 items", check: ["length body.echoed.items '<' 10"] },
+                {
+                  id: "exactly 3 items",
+                  check: ["length body.echoed.items '==' 3"],
+                },
+                {
+                  id: "at least 1 item",
+                  check: ["length body.echoed.items '>=' 1"],
+                },
+                {
+                  id: "less than 10 items",
+                  check: ["length body.echoed.items '<' 10"],
+                },
               ],
             },
           },
@@ -277,8 +313,14 @@ describe("GUIDE.md examples", function () {
             request: { post: "test", body: { name: "Alice" } },
             response: {
               validate: [
-                { id: "name is 5 chars", check: ["length body.echoed.name '==' 5"] },
-                { id: "name at least 3 chars", check: ["length body.echoed.name '>=' 3"] },
+                {
+                  id: "name is 5 chars",
+                  check: ["length body.echoed.name '==' 5"],
+                },
+                {
+                  id: "name at least 3 chars",
+                  check: ["length body.echoed.name '>=' 3"],
+                },
               ],
             },
           },
@@ -299,7 +341,10 @@ describe("GUIDE.md examples", function () {
             request: { post: "test", body: { metadata: { foo: 1, bar: 2 } } },
             response: {
               validate: [
-                { id: "metadata has 2 keys", check: ["length body.echoed.metadata '==' 2"] },
+                {
+                  id: "metadata has 2 keys",
+                  check: ["length body.echoed.metadata '==' 2"],
+                },
               ],
             },
           },
@@ -319,11 +364,17 @@ describe("GUIDE.md examples", function () {
         steps: [
           {
             step: "test empty",
-            request: { post: "test", body: { emptyStr: "", nonEmpty: "value", emptyArr: [] } },
+            request: {
+              post: "test",
+              body: { emptyStr: "", nonEmpty: "value", emptyArr: [] },
+            },
             response: {
               validate: [
                 { id: "empty string", check: ["empty body.echoed.emptyStr"] },
-                { id: "not empty string", check: ["notEmpty body.echoed.nonEmpty"] },
+                {
+                  id: "not empty string",
+                  check: ["notEmpty body.echoed.nonEmpty"],
+                },
                 { id: "empty array", check: ["empty body.echoed.emptyArr"] },
               ],
             },
@@ -342,11 +393,20 @@ describe("GUIDE.md examples", function () {
         steps: [
           {
             step: "test null",
-            request: { post: "test", body: { deletedAt: null, createdAt: 1234567890 } },
+            request: {
+              post: "test",
+              body: { deletedAt: null, createdAt: 1234567890 },
+            },
             response: {
               validate: [
-                { id: "deletedAt is null", check: ["null body.echoed.deletedAt"] },
-                { id: "createdAt is not null", check: ["notNull body.echoed.createdAt"] },
+                {
+                  id: "deletedAt is null",
+                  check: ["null body.echoed.deletedAt"],
+                },
+                {
+                  id: "createdAt is not null",
+                  check: ["notNull body.echoed.createdAt"],
+                },
               ],
             },
           },
@@ -368,12 +428,21 @@ describe("GUIDE.md examples", function () {
             step: "test nested",
             request: {
               post: "test",
-              body: { user: { profile: { name: "Alice" } }, items: [{ id: 123 }] },
+              body: {
+                user: { profile: { name: "Alice" } },
+                items: [{ id: 123 }],
+              },
             },
             response: {
               validate: [
-                { id: "nested name", check: ["eq body.echoed.user.profile.name 'Alice'"] },
-                { id: "first item id", check: ["eq body.echoed.items.[0].id 123"] },
+                {
+                  id: "nested name",
+                  check: ["eq body.echoed.user.profile.name 'Alice'"],
+                },
+                {
+                  id: "first item id",
+                  check: ["eq body.echoed.items.[0].id 123"],
+                },
               ],
             },
           },
@@ -394,7 +463,10 @@ describe("GUIDE.md examples", function () {
             request: { post: "test", body: {} },
             response: {
               validate: [
-                { id: "content type", check: ["eq header.content_type 'application/json'"] },
+                {
+                  id: "content type",
+                  check: ["eq header.content_type 'application/json'"],
+                },
               ],
             },
           },
@@ -444,7 +516,9 @@ describe("GUIDE.md examples", function () {
               get: "session",
             },
             response: {
-              validate: [{ id: "data persisted", check: ["eq body.foo 'bar'"] }],
+              validate: [
+                { id: "data persisted", check: ["eq body.foo 'bar'"] },
+              ],
             },
           },
         ],
@@ -470,7 +544,9 @@ describe("GUIDE.md examples", function () {
             response: {
               session: { name: "userSession", from: { body: "echoed.token" } },
               capture: { token: { body: "echoed.token" } },
-              validate: [{ id: "token captured", check: ["eq token 'abc123'"] }],
+              validate: [
+                { id: "token captured", check: ["eq token 'abc123'"] },
+              ],
             },
           },
         ],
@@ -495,7 +571,10 @@ describe("GUIDE.md examples", function () {
         steps: [
           {
             step: "create user",
-            request: { post: "test", body: { id: 123, contact: { email: "test@example.com" } } },
+            request: {
+              post: "test",
+              body: { id: 123, contact: { email: "test@example.com" } },
+            },
             response: {
               capture: {
                 userId: { body: "echoed.id" },
@@ -503,7 +582,10 @@ describe("GUIDE.md examples", function () {
               },
               validate: [
                 { id: "userId captured", check: ["eq userId 123"] },
-                { id: "email captured", check: ["eq userEmail 'test@example.com'"] },
+                {
+                  id: "email captured",
+                  check: ["eq userEmail 'test@example.com'"],
+                },
               ],
             },
           },
@@ -578,7 +660,12 @@ describe("GUIDE.md examples", function () {
               },
             ],
             response: {
-              validate: [{ id: "handler set value", check: ["eq customValue 'success'"] }],
+              validate: [
+                {
+                  id: "handler set value",
+                  check: ["eq customValue 'success'"],
+                },
+              ],
             },
           },
         ],
@@ -652,7 +739,7 @@ describe("GUIDE.md examples", function () {
             step: "test status class",
             request: { post: "test", body: {} },
             response: {
-              statusClass: "2xx",
+              statusClass: "2xx", // redundant, 2xx is the default
               validate: [{ id: "response ok", check: ["eq body.ok true"] }],
             },
           },
@@ -662,6 +749,293 @@ describe("GUIDE.md examples", function () {
       const result = await runZillaScript(script);
       expect(result.stepResults[0]!.status).to.equal(200);
       expect(result.stepResults[0]!.validation.result).to.be.true;
+    });
+  });
+
+  describe("Loops", () => {
+    it("loops over a simple array", async () => {
+      const script: ZillaScript = {
+        script: "loop-example",
+        init,
+        steps: [
+          {
+            step: "test-multiple-items",
+            loop: {
+              items: ["apple", "banana", "orange"],
+              varName: "fruit",
+              steps: [
+                {
+                  request: {
+                    post: "test",
+                    body: { name: "{{fruit}}" },
+                  },
+                  response: {
+                    validate: [
+                      {
+                        id: "echo matches input",
+                        check: ["eq body.echoed.name fruit"],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      const result = await runZillaScript(script);
+      expect(result.stepResults).to.have.lengthOf(4);
+      expect(result.stepResults[0]!.validation.result).to.be.true;
+      expect(result.stepResults[1]!.validation.result).to.be.true;
+      expect(result.stepResults[2]!.validation.result).to.be.true;
+      expect((result.stepResults[0]!.body as any).echoed.name).to.equal(
+        "apple"
+      );
+      expect((result.stepResults[1]!.body as any).echoed.name).to.equal(
+        "banana"
+      );
+      expect((result.stepResults[2]!.body as any).echoed.name).to.equal(
+        "orange"
+      );
+    });
+
+    it("loops over API response data", async () => {
+      const script: ZillaScript = {
+        script: "loop-over-api-data",
+        init,
+        steps: [
+          {
+            step: "fetch-array",
+            request: { post: "array" },
+            response: {
+              capture: {
+                itemList: { body: null },
+              },
+            },
+          },
+          {
+            step: "process-each-item",
+            loop: {
+              items: "itemList",
+              varName: "item",
+              indexVarName: "itemIndex",
+              steps: [
+                {
+                  request: {
+                    post: "test",
+                    body: { foo: "{{item.foo}}", index: "{{itemIndex}}" },
+                  },
+                  response: {
+                    validate: [
+                      {
+                        id: "item matches",
+                        check: ["eq body.echoed.foo item.foo"],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      const result = await runZillaScript(script);
+      // fetch + 3 loop iterations + loop container = 5 total
+      expect(result.stepResults).to.have.lengthOf(5);
+      // stepResults[0] is fetch, [1-3] are loop iterations, [4] is loop container
+      expect((result.stepResults[1].body as any).echoed.foo).to.equal(1);
+      expect((result.stepResults[2].body as any).echoed.foo).to.equal(2);
+      expect((result.stepResults[3].body as any).echoed.foo).to.equal(3);
+      expect((result.stepResults[1].body as any).echoed.index).to.equal(0);
+      expect((result.stepResults[2].body as any).echoed.index).to.equal(1);
+      expect((result.stepResults[3].body as any).echoed.index).to.equal(2);
+    });
+  });
+
+  describe("Script Inclusion", () => {
+    const createEntityScript: ZillaScript = {
+      script: "create-entity",
+      params: {
+        entityName: { required: true },
+        entityType: { default: "widget" },
+      },
+      sets: {
+        vars: ["entityId"],
+      },
+      steps: [
+        {
+          request: {
+            post: "test",
+            body: {
+              name: "{{entityName}}",
+              type: "{{entityType}}",
+            },
+          },
+          response: {
+            capture: {
+              entityId: { body: "echoed.name" },
+            },
+            validate: [
+              {
+                id: "entity created successfully",
+                check: ["eq body.ok true"],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    it("includes a script with parameters", async () => {
+      const mainScript: ZillaScript = {
+        script: "test-entity",
+        init,
+        steps: [
+          {
+            step: "create-first-entity",
+            include: createEntityScript,
+            params: {
+              entityName: "Widget A",
+              entityType: "widget",
+            },
+          },
+        ],
+      };
+
+      const result = await runZillaScript(mainScript);
+      // inner step + include container = 2 total
+      expect(result.stepResults).to.have.lengthOf(2);
+      expect(result.stepResults[0]!.validation.result).to.be.true;
+      expect((result.stepResults[0]!.body as any).echoed.name).to.equal(
+        "Widget A"
+      );
+      expect((result.stepResults[0]!.body as any).echoed.type).to.equal(
+        "widget"
+      );
+      expect(result.stepResults[0]!.vars.entityId).to.equal("Widget A");
+    });
+
+    it("includes a script multiple times with different parameters", async () => {
+      const mainScript: ZillaScript = {
+        script: "test-multiple-entities",
+        init,
+        steps: [
+          {
+            step: "create-first-entity",
+            include: createEntityScript,
+            params: {
+              entityName: "Widget A",
+              entityType: "widget",
+            },
+          },
+          {
+            step: "create-second-entity",
+            include: createEntityScript,
+            params: {
+              entityName: "Gadget B",
+              entityType: "gadget",
+            },
+          },
+          {
+            step: "verify-entity-exists",
+            request: {
+              post: "test",
+              body: { name: "{{entityId}}" },
+            },
+            response: {
+              validate: [
+                {
+                  id: "entity found",
+                  check: ["eq body.echoed.name 'Gadget B'"],
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      const result = await runZillaScript(mainScript);
+      // Two includes + their inner steps + verify step
+      expect(result.stepResults).to.have.lengthOf(5);
+      expect(result.stepResults[0]!.validation.result).to.be.true;
+      expect(result.stepResults[2]!.validation.result).to.be.true;
+      expect(result.stepResults[4]!.validation.result).to.be.true;
+      expect((result.stepResults[0]!.body as any).echoed.name).to.equal(
+        "Widget A"
+      );
+      expect((result.stepResults[2]!.body as any).echoed.name).to.equal(
+        "Gadget B"
+      );
+      expect((result.stepResults[4]!.body as any).echoed.name).to.equal(
+        "Gadget B"
+      );
+    });
+
+    it("uses variables created by included script", async () => {
+      const loginScript: ZillaScript = {
+        script: "login",
+        params: {
+          username: { required: true },
+        },
+        sets: {
+          vars: ["userId"],
+        },
+        steps: [
+          {
+            request: {
+              post: "test",
+              body: { username: "{{username}}" },
+            },
+            response: {
+              capture: {
+                userId: { body: "echoed.username" },
+              },
+            },
+          },
+        ],
+      };
+
+      const mainScript: ZillaScript = {
+        script: "main-test",
+        init,
+        steps: [
+          {
+            step: "perform-login",
+            include: loginScript,
+            params: {
+              username: "testuser@example.com",
+            },
+          },
+          {
+            step: "use-userId",
+            request: {
+              post: "test",
+              body: { user: "{{userId}}" },
+            },
+            response: {
+              validate: [
+                {
+                  id: "userId preserved",
+                  check: ["eq body.echoed.user 'testuser@example.com'"],
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      const result = await runZillaScript(mainScript);
+      // 1 include + 1 inner + 1 use-userId = 3 total
+      expect(result.stepResults).to.have.lengthOf(3);
+      expect(result.stepResults[1]!.vars.userId).to.equal(
+        "testuser@example.com"
+      );
+      expect(result.stepResults[2]!.vars.userId).to.equal(
+        "testuser@example.com"
+      );
+      expect(result.stepResults[2]!.validation.result).to.be.true;
     });
   });
 

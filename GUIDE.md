@@ -11,6 +11,30 @@ A comprehensive guide to writing declarative API tests with zilla-script.
 - [Requests](#requests)
 - [Responses](#responses)
 
+### Init Configuration
+- [Init Overview](#init-overview)
+- [Basic Structure](#basic-structure)
+- [Servers Configuration](#servers-configuration)
+
+### Sessions
+- [Session Management](#session-management)
+- [Pre-existing Sessions](#pre-existing-sessions)
+- [Capturing New Sessions](#capturing-new-sessions)
+- [Session Lifecycle](#session-lifecycle)
+
+### Variables
+- [Variables Overview](#variables-overview)
+- [How Variables are Defined](#how-variables-are-defined)
+- [Variable Template Evaluation](#variable-template-evaluation)
+- [Using Variables](#using-variables)
+- [Variable Capture](#variable-capture)
+  - [Capture from Response Body](#capture-from-response-body)
+  - [Capture from Response Headers](#capture-from-response-headers)
+  - [Capture from Cookies](#capture-from-cookies)
+  - [Capture Computed Values](#capture-computed-values)
+  - [Parsing JSON Strings](#parsing-json-strings)
+- [Editing Variables](#editing-variables)
+
 ### Validation
 - [Validation Overview](#validation-overview)
 - [Basic Validations](#basic-validations)
@@ -23,14 +47,32 @@ A comprehensive guide to writing declarative API tests with zilla-script.
 - [Real-World Validation Examples](#real-world-validation-examples)
 - [Validation Operator Reference](#validation-operator-reference)
 
-### Init Configuration
-- [Init Overview](#init-overview)
-- [Servers Configuration](#servers-configuration)
-- [Session Management](#session-management)
-- [Variables](#variables)
-- [Custom Handlers](#custom-handlers)
-- [Lifecycle Hooks](#lifecycle-hooks)
-- [Runtime Options](#runtime-options)
+### Loops
+- [Loops Overview](#loops-overview)
+- [Loop Structure](#loop-structure)
+- [Looping Over API Response Data](#looping-over-api-response-data)
+- [Simple Loop Example](#simple-loop-example)
+- [Accessing Loop Variables](#accessing-loop-variables)
+
+### Including Scripts in Scripts
+- [Script Inclusion Overview](#script-inclusion-overview)
+- [Declaring an Includable Script](#declaring-an-includable-script)
+- [Including a Script](#including-a-script)
+- [Script Inclusion Example](#script-inclusion-example)
+- [Benefits of Script Inclusion](#benefits-of-script-inclusion)
+
+### Custom Handlers
+- [Custom Handlers Overview](#custom-handlers-overview)
+- [Registering Handlers](#registering-handlers)
+- [Using Handlers in Steps](#using-handlers-in-steps)
+- [Common Handler Patterns](#common-handler-patterns)
+- [Handler Execution Order](#handler-execution-order)
+
+### Lifecycle Hooks
+- [Lifecycle Hooks Overview](#lifecycle-hooks-overview)
+
+### Runtime Options
+- [Runtime Options Overview](#runtime-options-overview)
 
 ### Examples & Best Practices
 - [Complete Examples](#complete-examples)
@@ -39,6 +81,8 @@ A comprehensive guide to writing declarative API tests with zilla-script.
 - [Summary](#summary)
 
 ---
+
+# Core Concepts
 
 ## Quick Start
 
@@ -67,6 +111,16 @@ await runZillaScript(MyTest, { env: process.env });
 ```
 
 That's it. No boilerplate, no manual fetch calls, no manual assertions. Just describe what you want to test.
+
+If you're using a test framework like mocha, you'd write:
+
+```typescript
+describe("my API test", async () => {
+    it("hits some endpoint and we get what we expect", async () => runZillaScript(MyTest))
+})
+```
+If any script validation fails, the test will fail.
+Note: unless a test specifies a specific HTTP status code (via `response.status`) or status class (via ) to expect in the response, any script step whose response that returns a status other than 2xx will also throw an error and fail the test.
 
 ---
 
@@ -144,7 +198,11 @@ Steps are the building blocks of your test. Each step can:
 - Capture values from the response
 - Validate the response
 - Run custom handlers
+
+OR
 - Loop over data
+
+OR
 - Include other scripts
 
 ### Basic Step
@@ -276,6 +334,9 @@ request: {
 Responses describe what to expect and what to capture.
 
 ### Status Validation
+Use `status` to specify an exact HTTP response status code to match, or `statusClass` to match the first digit of the HTTP response status.
+
+If neither `status` nor `statusClass` is specified, the default validation is to check for a `statusClass` of `2xx`, meaning any response from 200-299 will pass validation.
 
 ```typescript
 response: {
@@ -283,7 +344,11 @@ response: {
 }
 
 response: {
-  statusClass: "2xx"  // Any 2xx status
+  statusClass: "2xx"  // Any 2xx status (default)
+}
+
+response: {
+  statusClass: "1xx"  // Any 1xx status
 }
 
 response: {
@@ -341,7 +406,742 @@ response: {
 
 ---
 
-# Validation (Detailed)
+# Init Configuration
+
+## Init Overview
+
+The `init` block is where you configure the foundation of your API test: servers, sessions, variables, and custom handlers. Think of it as your test's "constructor" – everything starts here.
+
+---
+
+## Basic Structure
+
+The `init` block can appear in two places:
+
+1. **In your ZillaScript definition** (embedded)
+2. **In ZillaScriptOptions at runtime** (overrides embedded)
+
+```typescript
+import { ZillaScript, runZillaScript } from "zilla-script";
+
+// 1. Embedded in script
+const MyScript: ZillaScript = {
+  script: "my-test",
+  init: {
+    servers: [/* ... */],
+    vars: { /* ... */ },
+    sessions: { /* ... */ },
+    handlers: { /* ... */ }
+  },
+  steps: [/* ... */]
+};
+
+// 2. Runtime override
+await runZillaScript(MyScript, {
+  env: process.env,
+  init: {
+    // These override the embedded init
+    servers: [/* ... */],
+    vars: { /* ... */ }
+  }
+});
+```
+
+**Init merge behavior:**
+- Runtime `init` properties **override** script `init` properties
+- Use embedded `init` for script-specific configuration
+- Use runtime `init` for environment-specific configuration (like server URLs, credentials)
+
+---
+
+## Servers Configuration
+
+### Single Server (Simple Case)
+
+Most APIs need just one server:
+
+```typescript
+init: {
+  servers: [{
+    base: "http://localhost:3030/api"
+  }]
+}
+```
+
+The first server is the **default server** – all requests go there unless you specify otherwise.
+
+### Multiple Servers
+
+For microservices or CDN scenarios:
+
+```typescript
+init: {
+  servers: [
+    {
+      server: "api",  // Symbolic name (optional, but recommended for multiple servers)
+      base: "http://localhost:3030/api"
+    },
+    {
+      server: "cdn",
+      base: "http://localhost:4000"
+    },
+    {
+      server: "auth",
+      base: "http://localhost:5000/oauth"
+    }
+  ]
+}
+```
+
+Use in steps:
+
+```typescript
+steps: [
+  {
+    step: "create user",
+    request: { post: "users", body: { name: "Alice" } }  // Uses default (api)
+  },
+  {
+    step: "upload avatar",
+    request: {
+      server: "cdn",  // Explicitly use CDN server
+      post: "uploads/avatar",
+      body: { /* ... */ }
+    }
+  }
+]
+```
+
+### Environment Variables in Server URLs
+
+**Do not hardcode URLs.** Use environment variables:
+
+```typescript
+init: {
+  servers: [{
+    base: "http://{{env.API_HOST}}:{{env.API_PORT}}/{{env.API_PATH}}"
+  }]
+}
+```
+
+Then pass `env` at runtime:
+
+```typescript
+await runZillaScript(MyScript, {
+  env: process.env  // Or { API_HOST: "localhost", API_PORT: "3030", API_PATH: "api" }
+});
+```
+
+The `base` URL is evaluated as a **Handlebars template** with `env` as the context.
+
+### Server Session Configuration
+
+Configure how sessions are sent for each server:
+
+```typescript
+init: {
+  servers: [{
+    base: "http://localhost:3030/api",
+    session: {
+      cookie: "sessionId"  // Send session as cookie named "sessionId"
+    }
+  }]
+}
+```
+
+Or use a header:
+
+```typescript
+session: {
+  header: "X-Session-Token"  // Send session in this header
+}
+```
+
+Or both (session will be sent in both places):
+
+```typescript
+session: {
+  cookie: "connect.sid",
+  header: "Authorization"
+}
+```
+
+**Default behavior:** If `session` is not specified, sessions won't be sent automatically. You'll need to specify session capture and usage explicitly in each step.
+
+---
+
+# Sessions
+
+## Session Management
+
+Sessions in zilla-script allow you to maintain authenticated state across multiple requests. You can either provide pre-existing session tokens or capture new sessions from authentication responses.
+
+---
+
+## Pre-existing Sessions
+
+If you already have session tokens (e.g., an admin session), provide them in the `init` block:
+
+```typescript
+init: {
+  sessions: {
+    admin: "admin-token-12345",
+    testUser: "user-token-67890"
+  }
+}
+```
+
+Use in steps:
+
+```typescript
+{
+  step: "admin: delete user",
+  request: {
+    session: "admin",
+    delete: "users/{{userId}}"
+  }
+}
+```
+
+---
+
+## Capturing New Sessions
+
+### Simplest Case – Use Server's Default Session Configuration
+
+When your server is configured with session handling, you can simply name the session and zilla-script will use the server's configuration:
+
+```typescript
+init: {
+  servers: [{
+    base: "http://localhost:3030/api",
+    session: { cookie: "sessionId" }  // Define how sessions are sent/captured
+  }]
+}
+
+steps: [
+  {
+    step: "login",
+    request: {
+      post: "auth/login",
+      body: { username: "{{username}}", password: "{{password}}" }
+    },
+    response: {
+      session: { name: "userSession" }  // Just name it - uses server's session config
+    }
+  }
+]
+```
+
+This will automatically look for the `sessionId` cookie in the response. **This is the recommended approach** for standard cookie/header-based sessions.
+
+### Explicit Capture (Override Server Defaults)
+
+When the session token is in a different location or format, specify `from`:
+
+```typescript
+response: {
+  session: {
+    name: "userSession",
+    from: { body: "session.token" }  // JSONPath ($ is implied)
+  }
+}
+```
+
+**Where to capture from:**
+
+```typescript
+// From response body (JSONPath, $ is implied)
+from: { body: "session.token" }       // Extracts $.session.token
+from: { body: "data.auth.sessionId" } // Extracts $.data.auth.sessionId
+from: { body: null }                  // Entire body is the session token (string)
+
+// From response header
+from: { header: { name: "X-Session-Token" } }
+
+// From response cookie (specific cookie name)
+from: { cookie: { name: "connect.sid" } }
+```
+
+### What Happens If No Session Config Exists?
+
+If you try to capture a session without `from` and the server has no `session` config:
+
+```typescript
+// ❌ This will fail if server has no session config
+init: {
+  servers: [{ base: "http://localhost:3030/api" }]  // No session config!
+}
+
+response: {
+  session: { name: "mySession" }  // ERROR: No capture strategy defined
+}
+```
+
+**The code behavior:**
+- If `from` is omitted, zilla-script constructs a capture strategy from `server.session.header` and `server.session.cookie`
+- If **both** are undefined (no session config), the capture strategy has `body: undefined`, `header: undefined`, `cookie: undefined`
+- The `extract()` function will throw an error: `"invalid_capture_source"`
+
+**Solution:** Either define server session config OR always specify `from` explicitly:
+
+```typescript
+// ✅ Option 1: Define server session config
+init: {
+  servers: [{
+    base: "http://localhost:3030/api",
+    session: { cookie: "sessionId" }
+  }]
+}
+
+// ✅ Option 2: Always use explicit 'from'
+response: {
+  session: {
+    name: "mySession",
+    from: { body: "token" }  // Explicit capture
+  }
+}
+```
+
+---
+
+## Session Lifecycle
+
+1. **Capture** a session in a response
+2. **Reference** it by name in subsequent requests
+3. Session is **automatically sent** according to server's session config
+
+```typescript
+steps: [
+  {
+    step: "login",
+    request: {
+      post: "auth/login",
+      body: { username: "alice", password: "secret" }
+    },
+    response: {
+      session: { name: "userSession", from: { body: "token" } }
+    }
+  },
+  {
+    step: "get profile",
+    request: {
+      session: "userSession",  // Automatically sends token
+      get: "profile"
+    }
+  },
+  {
+    step: "update profile",
+    request: {
+      session: "userSession",  // Same session
+      post: "profile",
+      body: { bio: "Updated bio" }
+    }
+  }
+]
+```
+
+---
+
+# Variables
+
+## Variables Overview
+
+Variables are the state mechanism in zilla-script. They store values that can be used across steps, captured from responses, and modified throughout test execution.
+
+---
+
+## How Variables are Defined
+
+Variables can be defined in **four ways**:
+
+### 1. Init Declaration (Most Common)
+
+Declare variables upfront in the `init` block:
+
+```typescript
+init: {
+  vars: {
+    username: "testuser",              // Literal string
+    password: "{{env.TEST_PASSWORD}}", // From environment (evaluated at runtime)
+    userId: null,                      // Uninitialized (will be assigned later)
+    count: 0,                          // Numeric
+    isAdmin: false,                    // Boolean
+    tags: ["tag1", "tag2"],            // Array
+    config: { debug: true }            // Object
+  }
+}
+```
+
+**Best practice:** Declare all variables upfront, even if they start as `null`. This makes your test self-documenting.
+
+### 2. Runtime Options
+
+Pass variables when calling `runZillaScript()`:
+
+```typescript
+await runZillaScript(MyScript, {
+  init: {
+    vars: {
+      testRunId: generateTestId(),
+      timestamp: Date.now()
+    }
+  }
+});
+```
+
+**Precedence:** Runtime vars override script vars.
+
+### 3. Captured from Responses
+
+Variables can be captured from HTTP responses (detailed below in [Variable Capture](#variable-capture)):
+
+```typescript
+response: {
+  capture: {
+    userId: { body: "id" },
+    token: { header: { name: "X-Auth-Token" } }
+  }
+}
+```
+
+### 4. Computed via `assign`
+
+Create variables by evaluating Handlebars expressions:
+
+```typescript
+capture: {
+  fullName: { assign: "{{firstName}} {{lastName}}" },
+  timestamp: { assign: "{{env.NOW}}" }
+}
+```
+
+---
+
+## Variable Template Evaluation
+
+**Variable values are Handlebars templates.** If the value contains `{{`, it's evaluated:
+
+```typescript
+vars: {
+  apiKey: "{{env.API_KEY}}",           // ✅ Evaluated: pulls from process.env
+  url: "http://{{env.HOST}}:{{port}}", // ✅ Evaluated: combines env and vars
+  literal: "not-a-{{template}}",       // ⚠️ Evaluated but will fail unless "template" exists
+  plain: "just-a-string"               // ✅ Not evaluated: no {{
+}
+```
+
+---
+
+## Using Variables
+
+Reference variables in **any Handlebars context**:
+
+**In URLs:**
+```typescript
+request: {
+  get: "users/{{userId}}/posts/{{postId}}"
+}
+```
+
+**In request bodies:**
+```typescript
+request: {
+  post: "posts",
+  body: {
+    title: "Post by {{username}}",
+    authorId: "{{userId}}",
+    tags: ["{{category}}", "featured"]
+  }
+}
+```
+
+**In validations:**
+```typescript
+validate: [
+  { id: "correct user", check: ["eq body.userId userId"] }
+]
+```
+
+**In query parameters:**
+```typescript
+request: {
+  get: "search",
+  query: { q: "{{searchTerm}}", limit: "{{maxResults}}" }
+}
+```
+
+**Entire variable as body:**
+```typescript
+request: {
+  put: "users/{{user.id}}",
+  bodyVar: "user"  // Send entire user object
+}
+```
+
+---
+
+## Variable Capture
+
+Variables can be captured from HTTP responses in **four locations**: body, headers, cookies, and computed values.
+
+### Capture from Response Body
+
+Use JSONPath expressions (with implied `$.` prefix) to extract values from the response JSON:
+
+```typescript
+response: {
+  capture: {
+    // Simple property
+    userId: { body: "id" },                    // $.id
+
+    // Nested property
+    userEmail: { body: "contact.email" },      // $.contact.email
+
+    // Array element
+    firstName: { body: "users[0].name" },      // $.users[0].name
+
+    // Deep nesting
+    street: { body: "user.address.street" },   // $.user.address.street
+
+    // Entire response body
+    fullResponse: { body: null }               // Special: null = capture entire body
+  }
+}
+```
+
+**JSONPath Notes:**
+- The leading `$.` is **implied** and automatically added
+- Use dot notation for objects: `user.profile.name`
+- Use bracket notation for arrays: `items[0].id`
+- Arrays can use filters: `users[?(@.active)]` (full JSONPath syntax supported)
+
+**Example response:**
+```json
+{
+  "id": 123,
+  "contact": { "email": "alice@example.com" },
+  "users": [{ "name": "Alice" }, { "name": "Bob" }],
+  "user": {
+    "address": {
+      "street": "123 Main St"
+    }
+  }
+}
+```
+
+### Capture from Response Headers
+
+Extract values from HTTP response headers:
+
+```typescript
+response: {
+  capture: {
+    rateLimit: { header: { name: "X-RateLimit-Remaining" } },
+    contentType: { header: { name: "Content-Type" } },
+    etag: { header: { name: "ETag" } },
+    location: { header: { name: "Location" } }
+  }
+}
+```
+
+**Header matching:**
+- Header names are **case-insensitive** (per HTTP spec)
+- Returns the **first value** if header appears multiple times
+- Returns `null` if header doesn't exist
+
+### Capture from Cookies
+
+Extract values from `Set-Cookie` response headers:
+
+```typescript
+response: {
+  capture: {
+    sessionId: { cookie: { name: "connect.sid" } },
+    csrfToken: { cookie: { name: "XSRF-TOKEN" } },
+    preferences: { cookie: { name: "user_prefs" } }
+  }
+}
+```
+
+**Cookie extraction:**
+- Parses `Set-Cookie` header using regex: `cookieName=([^;]+)`
+- Extracts value before first semicolon
+- Returns `null` if cookie not found
+
+**Example `Set-Cookie` header:**
+```
+Set-Cookie: connect.sid=abc123; Path=/; HttpOnly; Secure
+```
+Captured value: `"abc123"`
+
+### Capture Computed Values
+
+Create variables by evaluating Handlebars expressions from existing variables:
+
+```typescript
+response: {
+  capture: {
+    // Concatenate strings
+    fullName: { assign: "{{user.firstName}} {{user.lastName}}" },
+
+    // Access nested vars
+    userUrl: { assign: "{{baseUrl}}/users/{{user.id}}" },
+
+    // Use environment variables
+    timestamp: { assign: "{{env.CURRENT_TIMESTAMP}}" }
+  }
+}
+```
+
+**How `assign` works:**
+1. The expression is evaluated as a Handlebars template
+2. Context includes: `vars`, `env`, `body`, `header` (normalized response headers)
+3. Result becomes the variable value
+
+### Parsing JSON Strings
+
+If a captured value is a **JSON string**, use `parse` to deserialize it:
+
+```typescript
+response: {
+  capture: {
+    // Parse once
+    metadata: { body: "data.metadata", parse: true },
+
+    // Parse multiple times (for double/triple-encoded JSON)
+    config: { body: "settings.config", parse: 2 }
+  }
+}
+```
+
+**Example:**
+
+Response body:
+```json
+{
+  "data": {
+    "metadata": "{\"userId\":123,\"roles\":[\"admin\"]}"
+  }
+}
+```
+
+Without `parse`:
+```typescript
+metadata === "{\"userId\":123,\"roles\":[\"admin\"]}"  // String
+```
+
+With `parse: true`:
+```typescript
+metadata === { userId: 123, roles: ["admin"] }  // Object
+```
+
+With `parse: 2` (double-encoded JSON):
+```json
+{ "config": "\"{\\\"key\\\":\\\"value\\\"}\"" }
+```
+First parse: `"{\"key\":\"value\"}"`
+Second parse: `{ key: "value" }`
+
+### Multiple Captures in One Step
+
+Combine all capture types in a single step:
+
+```typescript
+{
+  step: "create user and capture details",
+  request: { post: "users", body: { name: "Alice" } },
+  response: {
+    capture: {
+      // From body
+      userId: { body: "id" },
+      userName: { body: "name" },
+      userObj: { body: null },
+
+      // From headers
+      rateLimit: { header: { name: "X-RateLimit-Remaining" } },
+
+      // From cookies
+      sessionId: { cookie: { name: "sid" } },
+
+      // Computed
+      userUrl: { assign: "{{baseUrl}}/users/{{userId}}" },
+
+      // Parsed JSON
+      metadata: { body: "metadata", parse: true }
+    }
+  }
+}
+```
+
+### Variable Capture Rules
+
+1. **Variables must be declared first** in `init.vars` (even if `null`)
+2. **Captures happen after the request completes**
+3. **Captured values override previous values** (variables are mutable)
+4. **Failed captures throw errors** unless the value is explicitly nullable
+
+---
+
+## Editing Variables
+
+Update existing variables mid-script using the `edits` property:
+
+```typescript
+{
+  step: "update user object",
+  edits: {
+    user: {
+      status: "active",             // Set/update field
+      lastLogin: "{{now}}",         // Use other variables
+      tags: ["premium", "verified"] // Arrays work too
+    },
+    count: "{{count}} + 1",         // Can use expressions (if supported)
+    config: {
+      debug: false,
+      apiVersion: "v2"
+    }
+  }
+}
+```
+
+**What `edits` does:**
+- Merges new properties into existing variable
+- Overwrites conflicting properties
+- Preserves unmentioned properties
+- Evaluates Handlebars templates in values
+
+**Before edits:**
+```typescript
+user = { id: 123, name: "Alice", status: "pending" }
+```
+
+**After edits:**
+```typescript
+user = {
+  id: 123,                    // Preserved
+  name: "Alice",              // Preserved
+  status: "active",           // Updated
+  lastLogin: "2025-10-05",    // Added
+  tags: ["premium", "verified"] // Added
+}
+```
+
+**Using edited variables:**
+
+```typescript
+{
+  step: "save changes",
+  request: {
+    put: "users/{{user.id}}",
+    bodyVar: "user"  // Send entire modified user object
+  }
+}
+```
+
+---
+
+# Validation
 
 ## Validation Overview
 
@@ -865,449 +1665,391 @@ check: ["length body.tags '>' 0"]        // Has at least one tag
 
 ---
 
-## Init Overview
+# Loops
 
-The `init` block is where you configure the foundation of your API test: servers, sessions, variables, and custom handlers. Think of it as your test's "constructor" – everything starts here.
+## Loops Overview
 
-## Basic Structure
+Loops allow you to iterate over an array and execute a series of steps for each item.
+This is particularly useful when you need to test multiple items returned from an API, perform batch operations, or validate array elements individually.
 
-The `init` block can appear in two places:
-
-1. **In your ZillaScript definition** (embedded)
-2. **In ZillaScriptOptions at runtime** (overrides embedded)
-
-```typescript
-import { ZillaScript, runZillaScript } from "zilla-script";
-
-// 1. Embedded in script
-const MyScript: ZillaScript = {
-  script: "my-test",
-  init: {
-    servers: [/* ... */],
-    vars: { /* ... */ },
-    // ... other init properties
-  },
-  steps: [/* ... */]
-};
-
-// 2. Runtime override
-await runZillaScript(MyScript, {
-  env: process.env,
-  init: {
-    // These override the embedded init
-    servers: [/* ... */],
-    vars: { /* ... */ }
-  }
-});
-```
-
-**Init merge behavior:**
-- Runtime `init` properties **override** script `init` properties
-- Use embedded `init` for script-specific configuration
-- Use runtime `init` for environment-specific configuration (like server URLs, credentials)
+A loop is defined using the `loop` property in a step, which replaces the `request` property.
+Inside the loop, you specify nested `steps` that will be executed once for each item in the array.
 
 ---
 
-## Servers Configuration
-
-### Single Server (Simple Case)
-
-Most APIs need just one server:
+## Loop Structure
 
 ```typescript
-init: {
-  servers: [{
-    base: "http://localhost:3030/api"
-  }]
+{
+  step: "loop-step",
+  loop: {
+    items: ["item1", "item2", "item3"],  // Array to iterate over (or variable name)
+    varName: "currentItem",               // Variable name for current item
+    indexVarName: "index",                // Optional: variable name for array index
+    start: 0,                             // Optional: starting index (default 0)
+    steps: [                              // Steps to execute for each item
+      {
+        request: { /* ... */ },
+        response: { /* ... */ }
+      }
+    ]
+  }
 }
 ```
 
-The first server is the **default server** – all requests go there unless you specify otherwise.
+**Key properties:**
 
-### Multiple Servers
+- `items`: The array to iterate over. Can be a literal array or a string referencing a variable containing an array.
+- `varName`: The name of the variable that will hold the current item during each iteration.
+- `indexVarName` (optional): The name of the variable that will hold the current array index (0-based).
+- `start` (optional): The starting index for iteration (default is 0).
+- `steps`: An array of steps to execute for each item in the loop.
 
-For microservices or CDN scenarios:
+---
+
+## Looping Over API Response Data
+
+A common pattern is to fetch data from an API that returns an array, capture the array in a variable, then loop over it:
 
 ```typescript
-init: {
-  servers: [
+const script: ZillaScript = {
+  script: "loop-over-api-data",
+  init: {
+    servers: [{ base: "https://api.example.com" }]
+  },
+  steps: [
+    // Step 1: Fetch array from API
     {
-      server: "api",  // Symbolic name (optional, but recommended for multiple servers)
-      base: "http://localhost:3030/api"
+      step: "fetch-users",
+      request: { get: "users" },
+      response: {
+        capture: {
+          userList: { body: null }  // Capture entire response body (which is an array)
+        }
+      }
     },
+    // Step 2: Loop over the array
     {
-      server: "cdn",
-      base: "http://localhost:4000"
-    },
-    {
-      server: "auth",
-      base: "http://localhost:5000/oauth"
+      step: "process-each-user",
+      loop: {
+        items: "userList",           // Reference the captured variable
+        varName: "user",             // Current user object
+        indexVarName: "userIndex",   // Current index (0, 1, 2, ...)
+        steps: [
+          {
+            step: "validate-user",
+            request: {
+              get: "users/{{user.id}}",  // Use properties from current user
+            },
+            response: {
+              validate: [
+                {
+                  id: "user has valid email",
+                  check: ["includes user.email '@'"]
+                },
+                {
+                  id: "user id matches",
+                  check: ["eq body.id user.id"]
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   ]
-}
+};
 ```
-
-Use in steps:
-
-```typescript
-steps: [
-  {
-    step: "create user",
-    request: { post: "users", body: { name: "Alice" } }  // Uses default (api)
-  },
-  {
-    step: "upload avatar",
-    request: {
-      server: "cdn",  // Explicitly use CDN server
-      post: "uploads/avatar",
-      body: { /* ... */ }
-    }
-  }
-]
-```
-
-### Environment Variables in Server URLs
-
-**Do not hardcode URLs.** Use environment variables:
-
-```typescript
-init: {
-  servers: [{
-    base: "http://{{env.API_HOST}}:{{env.API_PORT}}/{{env.API_PATH}}"
-  }]
-}
-```
-
-Then pass `env` at runtime:
-
-```typescript
-await runZillaScript(MyScript, {
-  env: process.env  // Or { API_HOST: "localhost", API_PORT: "3030", API_PATH: "api" }
-});
-```
-
-The `base` URL is evaluated as a **Handlebars template** with `env` as the context.
-
-### Server Session Configuration
-
-Configure how sessions are sent for each server:
-
-```typescript
-init: {
-  servers: [{
-    base: "http://localhost:3030/api",
-    session: {
-      cookie: "sessionId"  // Send session as cookie named "sessionId"
-    }
-  }]
-}
-```
-
-Or use a header:
-
-```typescript
-session: {
-  header: "X-Session-Token"  // Send session in this header
-}
-```
-
-Or both (session will be sent in both places):
-
-```typescript
-session: {
-  cookie: "connect.sid",
-  header: "Authorization"
-}
-```
-
-**Default behavior:** If `session` is not specified, sessions won't be sent automatically. You'll need to specify session capture and usage explicitly in each step.
 
 ---
 
-## Session Management
+## Simple Loop Example
 
-### Pre-existing Sessions
-
-If you already have session tokens (e.g., an admin session), provide them:
+Here's a simpler example that loops over a hardcoded array:
 
 ```typescript
-init: {
-  sessions: {
-    admin: "admin-token-12345",
-    testUser: "user-token-67890"
-  }
-}
+const script: ZillaScript = {
+  script: "loop-example",
+  init: {
+    servers: [{ base: "https://api.example.com" }]
+  },
+  steps: [
+    {
+      step: "test-multiple-items",
+      loop: {
+        items: ["apple", "banana", "orange"],
+        varName: "fruit",
+        steps: [
+          {
+            request: {
+              post: "test",
+              body: { name: "{{fruit}}" }
+            },
+            response: {
+              validate: [
+                {
+                  id: "echo matches input",
+                  check: ["eq body.echoed.name fruit"]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+};
 ```
 
-Use in steps:
+This loop will execute 3 requests, one for each fruit, validating that the API correctly echoes back each value.
+
+---
+
+## Accessing Loop Variables
+
+Within loop steps, you have access to:
+
+- The loop item variable (specified by `varName`): contains the current item from the array
+- The index variable (specified by `indexVarName`, if provided): contains the current 0-based index
+- All other variables from the parent scope
+
+These variables can be used in:
+- Request URIs: `get: "items/{{currentItem.id}}"`
+- Request bodies: `body: { index: "{{index}}", item: "{{currentItem}}" }`
+- Validation checks: `check: ["eq body.name currentItem.name"]`
+
+---
+
+# Including Scripts in Scripts
+
+## Script Inclusion Overview
+
+Script inclusion allows you to compose larger test suites from smaller, reusable script modules.
+This promotes modularity, reduces duplication, and makes complex test scenarios easier to maintain.
+
+An included script is a complete `ZillaScript` object that can be invoked from within another script's step using the `include` property.
+
+---
+
+## Declaring an Includable Script
+
+When creating a script that will be included by others, follow these conventions:
+
+### 1. Declare Parameters
+
+Use the `params` property to declare what parameters your script expects:
 
 ```typescript
-{
-  step: "admin: delete user",
-  request: {
-    session: "admin",
-    delete: "users/{{userId}}"
-  }
-}
+const loginScript: ZillaScript = {
+  script: "login",
+  params: {
+    username: { required: true },
+    password: { required: true },
+    baseUrl: { default: "https://api.example.com" }
+  },
+  steps: [
+    // ... steps that use {{username}}, {{password}}, {{baseUrl}}
+  ]
+};
 ```
 
-### Capturing New Sessions
+**Parameter properties:**
+- `required`: If `true`, the calling script must provide this parameter
+- `default`: Default value if the parameter is not provided
 
-**Simplest case – use server's default session configuration:**
+### 2. Document Created Variables and Sessions (Recommended)
+
+For clarity and maintainability, declare what variables and sessions your script will create using the `sets` property:
 
 ```typescript
-init: {
-  servers: [{
-    base: "http://localhost:3030/api",
-    session: { cookie: "sessionId" }  // Define how sessions are sent/captured
-  }]
-}
+const loginScript: ZillaScript = {
+  script: "login",
+  params: {
+    username: { required: true },
+    password: { required: true }
+  },
+  sets: {
+    vars: ["userId", "userEmail"],      // Variables this script will create
+    sessions: ["authSession"]           // Sessions this script will create
+  },
+  init: {
+    servers: [{ base: "https://api.example.com" }]
+  },
+  steps: [
+    {
+      step: "authenticate",
+      request: {
+        post: "auth/login",
+        body: {
+          username: "{{username}}",
+          password: "{{password}}"
+        }
+      },
+      response: {
+        session: {
+          name: "authSession"
+        },
+        capture: {
+          userId: { body: "user.id" },
+          userEmail: { body: "user.email" }
+        }
+      }
+    }
+  ]
+};
+```
 
-steps: [
-  {
-    step: "login",
-    request: {
-      post: "auth/login",
-      body: { username: "{{username}}", password: "{{password}}" }
+---
+
+## Including a Script
+
+To include a script from another script, use the `include` property in a step and pass parameters via the `params` property:
+
+```typescript
+const mainScript: ZillaScript = {
+  script: "main-test",
+  init: {
+    servers: [{ base: "https://api.example.com" }]
+  },
+  steps: [
+    // Include the login script
+    {
+      step: "perform-login",
+      include: loginScript,
+      params: {
+        username: "testuser@example.com",
+        password: "secret123"
+      }
     },
-    response: {
-      session: { name: "userSession" }  // Just name it - uses server's session config
+    // Use variables and sessions created by the included script
+    {
+      step: "fetch-user-profile",
+      request: {
+        get: "users/{{userId}}",    // Variable created by loginScript
+        session: "authSession"      // Session created by loginScript
+      },
+      response: {
+        validate: [
+          {
+            id: "email matches",
+            check: ["eq body.email userEmail"]
+          }
+        ]
+      }
     }
-  }
-]
-```
-
-This will automatically look for the `sessionId` cookie in the response. **This is the recommended approach** for standard cookie/header-based sessions.
-
-**Explicit capture (override server defaults):**
-
-When the session token is in a different location or format, specify `from`:
-
-```typescript
-response: {
-  session: {
-    name: "userSession",
-    from: { body: "session.token" }  // JSONPath ($ is implied)
-  }
-}
-```
-
-**Where to capture from:**
-
-```typescript
-// From response body (JSONPath, $ is implied)
-from: { body: "session.token" }       // Extracts $.session.token
-from: { body: "data.auth.sessionId" } // Extracts $.data.auth.sessionId
-from: { body: null }                  // Entire body is the session token (string)
-
-// From response header
-from: { header: { name: "X-Session-Token" } }
-
-// From response cookie (specific cookie name)
-from: { cookie: { name: "connect.sid" } }
-```
-
-**What happens if no session config exists?**
-
-If you try to capture a session without `from` and the server has no `session` config:
-
-```typescript
-// ❌ This will fail if server has no session config
-init: {
-  servers: [{ base: "http://localhost:3030/api" }]  // No session config!
-}
-
-response: {
-  session: { name: "mySession" }  // ERROR: No capture strategy defined
-}
-```
-
-**The code behavior:**
-- If `from` is omitted, zilla-script constructs a capture strategy from `server.session.header` and `server.session.cookie`
-- If **both** are undefined (no session config), the capture strategy has `body: undefined`, `header: undefined`, `cookie: undefined`
-- The `extract()` function will throw an error: `"invalid_capture_source"`
-
-**Solution:** Either define server session config OR always specify `from` explicitly:
-
-```typescript
-// ✅ Option 1: Define server session config
-init: {
-  servers: [{
-    base: "http://localhost:3030/api",
-    session: { cookie: "sessionId" }
-  }]
-}
-
-// ✅ Option 2: Always use explicit 'from'
-response: {
-  session: {
-    name: "mySession",
-    from: { body: "token" }  // Explicit capture
-  }
-}
-```
-
-### Session Lifecycle
-
-1. **Capture** a session in a response
-2. **Reference** it by name in subsequent requests
-3. Session is **automatically sent** according to server's session config
-
-```typescript
-steps: [
-  {
-    step: "login",
-    response: {
-      session: { name: "userSession", from: { body: "token" } }
-    }
-  },
-  {
-    step: "get profile",
-    request: {
-      session: "userSession",  // Automatically sends token
-      get: "profile"
-    }
-  },
-  {
-    step: "update profile",
-    request: {
-      session: "userSession",  // Same session
-      post: "profile",
-      body: { bio: "Updated bio" }
-    }
-  }
-]
+  ]
+};
 ```
 
 ---
 
-## Variables
+## Script Inclusion Example
 
-### Declaring Variables
-
-Variables must be declared before use:
+Here's a complete example showing script composition:
 
 ```typescript
-init: {
-  vars: {
-    username: "testuser",           // Literal string
-    password: "{{env.TEST_PASSWORD}}", // From environment (evaluated at runtime)
-    userId: null,                   // Will be assigned later (null = uninitialized)
-    count: 0,                       // Numeric
-    isAdmin: false                  // Boolean
-  }
-}
-```
-
-**Variable values are Handlebars templates.** If the value contains `{{`, it's evaluated:
-
-```typescript
-vars: {
-  apiKey: "{{env.API_KEY}}",           // Evaluated: pulls from env
-  timestamp: "{{env.TIMESTAMP}}",      // Evaluated: pulls from env
-  literal: "not-a-{{template}}",       // Evaluated: contains {{, but likely fails unless "template" var exists
-  plain: "just-a-string"               // Not evaluated: no {{
-}
-```
-
-### Using Variables
-
-Reference variables in **any Handlebars context** (requests, validations, etc.):
-
-```typescript
-{
-  step: "create post",
-  request: {
-    post: "users/{{userId}}/posts",
-    body: {
-      title: "Post by {{username}}",
-      publishedAt: "{{timestamp}}"
+// Reusable script: creates a test entity
+const createEntityScript: ZillaScript = {
+  script: "create-entity",
+  params: {
+    entityName: { required: true },
+    entityType: { default: "widget" }
+  },
+  sets: {
+    vars: ["entityId"]
+  },
+  steps: [
+    {
+      request: {
+        post: "entities",
+        body: {
+          name: "{{entityName}}",
+          type: "{{entityType}}"
+        }
+      },
+      response: {
+        capture: {
+          entityId: { body: "id" }
+        },
+        validate: [
+          {
+            id: "entity created successfully",
+            check: ["eq body.success true"]
+          }
+        ]
+      }
     }
-  }
-}
-```
+  ]
+};
 
-### Capturing Variables from Responses
-
-```typescript
-{
-  step: "create user",
-  request: { post: "users", body: { name: "Alice" } },
-  response: {
-    capture: {
-      userId: { body: "id" },              // JSONPath: $.id
-      userEmail: { body: "contact.email" }, // JSONPath: $.contact.email
-      rateLimit: { header: { name: "X-RateLimit-Remaining" } },
-      csrfToken: { cookie: { name: "XSRF-TOKEN" } }
+// Main script: uses the reusable script multiple times
+const mainScript: ZillaScript = {
+  script: "test-multiple-entities",
+  init: {
+    servers: [{ base: "https://api.example.com" }]
+  },
+  steps: [
+    {
+      step: "create-first-entity",
+      include: createEntityScript,
+      params: {
+        entityName: "Widget A",
+        entityType: "widget"
+      }
+    },
+    {
+      step: "create-second-entity",
+      include: createEntityScript,
+      params: {
+        entityName: "Gadget B",
+        entityType: "gadget"
+      }
+    },
+    {
+      step: "verify-entity-exists",
+      request: {
+        get: "entities/{{entityId}}"  // Uses entityId from last include
+      },
+      response: {
+        validate: [
+          {
+            id: "entity found",
+            check: ["eq body.name 'Gadget B'"]
+          }
+        ]
+      }
     }
-  }
-}
-```
-
-**Capture entire body:**
-
-```typescript
-capture: {
-  user: { body: null }  // user = entire response body
-}
-```
-
-**Parse JSON strings:**
-
-```typescript
-capture: {
-  metadata: { body: "data.metadata", parse: true }  // If metadata is a JSON string, parse it
-}
-```
-
-**Assign computed values:**
-
-Variables can be assigned expressions (evaluated as Handlebars):
-
-```typescript
-capture: {
-  fullName: { assign: "{{user.firstName}} {{user.lastName}}" }
-}
-```
-
-### Editing Variables
-
-Update existing variables mid-script:
-
-```typescript
-{
-  step: "update user object",
-  edits: {
-    user: {
-      status: "active",             // Set/update field
-      lastLogin: "{{now}}",         // Use other variables
-      tags: ["premium", "verified"] // Arrays work too
-    }
-  }
-}
-```
-
-Then use the modified variable:
-
-```typescript
-{
-  step: "save changes",
-  request: {
-    post: "users/{{user.id}}",
-    bodyVar: "user"  // Send entire user object
-  }
-}
+  ]
+};
 ```
 
 ---
 
-## Custom Handlers
+## Benefits of Script Inclusion
+
+**Modularity**: Break complex test scenarios into focused, single-purpose scripts.
+
+**Reusability**: Write common operations once (login, setup, teardown) and reuse them across multiple test suites.
+
+**Maintainability**: When an API changes, update the included script once rather than in every test.
+
+**Clarity**: Main test scripts become more readable when they delegate details to well-named included scripts.
+
+**Composability**: Build complex test scenarios by combining simpler scripts, just like composing functions in code.
+
+---
+
+# Custom Handlers
+
+## Custom Handlers Overview
 
 Handlers are functions that run **after a request** and **after response variables are captured** but **before response validation checks**.
 Handlers perform custom logic that can't be expressed declaratively.
 Handlers can define new variables for use in subsequent validation checks and script steps.
 
-### Registering Handlers
+---
+
+## Registering Handlers
 
 ```typescript
 import { ZillaScriptResponseHandler } from "zilla-script";
@@ -1342,7 +2084,9 @@ init: {
 }
 ```
 
-### Using Handlers in Steps
+---
+
+## Using Handlers in Steps
 
 ```typescript
 {
@@ -1356,13 +2100,19 @@ init: {
       optionalArg: 100
     }
   }],
-  validations: [{ "id": "specialFlag is now defined", checks: ["eq {{specialFlag}} true"] }]
+  response: {
+    validate: [
+      { id: "specialFlag is now defined", check: ["eq specialFlag true"] }
+    ]
+  }
 }
 ```
 
-### Common Handler Patterns
+---
 
-**1. Database checks:**
+## Common Handler Patterns
+
+### 1. Database Checks
 
 ```typescript
 const checkDatabase: ZillaScriptResponseHandler = {
@@ -1380,7 +2130,7 @@ const checkDatabase: ZillaScriptResponseHandler = {
 };
 ```
 
-**2. Mock email/SMS token extraction:**
+### 2. Mock Email/SMS Token Extraction
 
 ```typescript
 const getMockToken: ZillaScriptResponseHandler = {
@@ -1397,7 +2147,7 @@ const getMockToken: ZillaScriptResponseHandler = {
 };
 ```
 
-**3. Crypto operations (like generating guest keys):**
+### 3. Crypto Operations (Like Generating Guest Keys)
 
 ```typescript
 const generateGuestKey: ZillaScriptResponseHandler = {
@@ -1422,7 +2172,7 @@ const generateGuestKey: ZillaScriptResponseHandler = {
 };
 ```
 
-**4. Response transformation:**
+### 4. Response Transformation
 
 ```typescript
 const parseCustomFormat: ZillaScriptResponseHandler = {
@@ -1436,7 +2186,9 @@ const parseCustomFormat: ZillaScriptResponseHandler = {
 };
 ```
 
-### Handler Execution Order
+---
+
+## Handler Execution Order
 
 Handlers run in the order specified:
 
@@ -1450,7 +2202,9 @@ handlers: [
 
 ---
 
-## Lifecycle Hooks
+# Lifecycle Hooks
+
+## Lifecycle Hooks Overview
 
 Hooks let you observe or modify state before/after each step:
 
@@ -1496,7 +2250,9 @@ type StepContext = {
 
 ---
 
-## Runtime Options
+# Runtime Options
+
+## Runtime Options Overview
 
 When calling `runZillaScript()`, you can pass additional options:
 
@@ -1534,6 +2290,8 @@ await runZillaScript(MyScript, {
 **Best practice:** Use script `init` for test-specific config, runtime `init` for environment-specific config.
 
 ---
+
+# Examples & Best Practices
 
 ## Complete Examples
 
@@ -1851,18 +2609,20 @@ If a handler throws, check:
 
 ## Summary
 
-The `init` block is your test foundation:
+**Key components of zilla-script:**
 
 - **`servers`**: Define API endpoints and session config
-- **`sessions`**: Pre-load existing session tokens
+- **`sessions`**: Pre-load existing session tokens or capture new ones
 - **`vars`**: Declare variables (use `null` for uninitialized)
 - **`handlers`**: Register custom functions for complex logic
 - **`beforeStep`/`afterStep`**: Observe or modify state during execution
+- **`validate`**: Define declarative response validations
 
 **Key principles:**
 1. Declare everything upfront
 2. Use environment variables for flexibility
 3. Runtime init overrides script init
 4. Handlers are your escape hatch when declarative isn't enough
+5. Sessions and variables make state management automatic
 
 Now go write some tests! 🚀
