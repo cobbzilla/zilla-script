@@ -99,6 +99,10 @@ const operatorHelpers: Array<[string, string]> = [
   ["notIncludes", "notIncludes"],
   ["empty", "empty"],
   ["notEmpty", "notEmpty"],
+  ["null", "null"],
+  ["notNull", "notNull"],
+  ["undefined", "undefined"],
+  ["notUndefined", "notUndefined"],
 ];
 
 operatorHelpers.forEach(([name, op]: [string, string]): void =>
