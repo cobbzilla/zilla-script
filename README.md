@@ -37,6 +37,7 @@ A `check` expression starts with a check type. Available check types are:
 | includes      | 2         | string            | inclusion                              | includes someVar 'someValue'   |
 
 # Example
+An example script is shown below. More examples can be found in the [script engine tests](./test/engine.spec.ts).
 
 ```typescript
 import { ZillaScript, runZillaScript } from "zilla-script";
